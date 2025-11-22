@@ -102,10 +102,10 @@ watchEffect(() => {
     <div class="space-y-6">
       <div class="space-y-1 text-center">
         <h1 class="text-xl font-semibold text-highlighted">
-          Sign in
+          Welcome back
         </h1>
         <p class="text-sm text-muted">
-          Enter your email below to access your account.
+          Sign in to continue documenting and organizing your evidence.
         </p>
       </div>
 
@@ -176,11 +176,11 @@ watchEffect(() => {
 
       <p class="text-[11px] leading-relaxed text-muted text-center">
         By continuing, you agree to our
-        <NuxtLink to="#" class="underline underline-offset-2 hover:text-highlighted">
+        <NuxtLink to="/terms-and-conditions" class="underline underline-offset-2 hover:text-highlighted">
           Terms of Service
         </NuxtLink>
         and
-        <NuxtLink to="#" class="underline underline-offset-2 hover:text-highlighted">
+        <NuxtLink to="/privacy-policy" class="underline underline-offset-2 hover:text-highlighted">
           Privacy Policy
         </NuxtLink>.
       </p>

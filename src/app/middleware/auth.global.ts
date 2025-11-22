@@ -3,10 +3,12 @@ export default defineNuxtRouteMiddleware((to, from) => {
   
   // Define public routes that don't require authentication
   const publicRoutes = [
-    '/',              // Landing page
-    '/auth/login',    // Login page
-    '/auth/signup',   // Signup page
-    '/auth/confirm'   // Email confirmation page
+    '/',                      // Landing page
+    '/auth/login',            // Login page
+    '/auth/signup',           // Signup page
+    '/auth/confirm',          // Email confirmation page
+    '/privacy-policy',        // Privacy policy page
+    '/terms-and-conditions'   // Terms and conditions page
   ]
   
   // Check if the current route is public

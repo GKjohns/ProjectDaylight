@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const appName = 'Acme Inc'
+const appName = 'Project Daylight'
 </script>
 
 <template>
@@ -8,19 +8,25 @@ const appName = 'Acme Inc'
     <div
       class="hidden md:flex flex-1 flex-col justify-between border-default bg-elevated/40 px-10 py-8 rounded-none"
     >
-      <div class="flex items-center gap-2 text-sm font-semibold text-highlighted">
-        <UIcon name="i-lucide-command" class="size-5" />
-        <span>{{ appName }}</span>
-      </div>
+      <NuxtLink to="/" class="flex items-center gap-2 text-sm font-semibold text-highlighted hover:opacity-80 transition">
+        <span class="inline-flex size-5 rounded-sm bg-primary" />
+        <span>Project Daylight</span>
+      </NuxtLink>
 
-      <p class="max-w-sm text-xs text-muted">
-        “This library has saved me countless hours of work and helped me deliver stunning designs to my
-        clients faster than ever before.” – Sofia Davis
+      <p class="max-w-sm text-sm text-muted leading-relaxed">
+        "Transform exhausted scribbles into court-ready evidence. Bringing clarity and order to parents navigating family court."
       </p>
     </div>
 
     <!-- Right side: auth card -->
-    <div class="flex-1 flex items-center justify-center px-4 py-10">
+    <div class="flex-1 flex items-center justify-center px-4 py-10 relative">
+      <!-- Color mode toggle in top right -->
+      <ClientOnly>
+        <div class="absolute top-4 right-4">
+          <UColorModeButton />
+        </div>
+      </ClientOnly>
+
       <div class="w-full max-w-md">
         <slot />
       </div>

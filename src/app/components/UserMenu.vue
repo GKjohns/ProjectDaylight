@@ -11,25 +11,54 @@ const supabase = useSupabaseClient()
 const supabaseUser = useSupabaseUser()
 const router = useRouter()
 
+type JwtUser = {
+  email?: string
+  sub?: string
+  user_metadata?: {
+    full_name?: string
+    name?: string
+    preferred_name?: string
+    avatar_url?: string
+    picture?: string
+    [key: string]: any
+  }
+}
+
+type UserProfileRow = {
+  full_name: string | null
+  email: string | null
+}
+
+const profile = ref<UserProfileRow | null>(null)
+const loadingProfile = ref(false)
+
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
 const user = computed(() => {
-  if (supabaseUser.value) {
-    return {
-      name: supabaseUser.value.email || 'Account',
-      avatar: {
-        src: supabaseUser.value.user_metadata?.avatar_url || '',
-        alt: supabaseUser.value.email || 'Account'
-      }
-    }
-  }
+  const jwtUser = supabaseUser.value as JwtUser | null
+
+  const displayName =
+    profile.value?.full_name ||
+    jwtUser?.user_metadata?.preferred_name ||
+    jwtUser?.user_metadata?.full_name ||
+    jwtUser?.user_metadata?.name ||
+    jwtUser?.email ||
+    'Account'
+
+  const email = profile.value?.email || jwtUser?.email || ''
+
+  const avatarSrc =
+    jwtUser?.user_metadata?.avatar_url ||
+    jwtUser?.user_metadata?.picture ||
+    ''
 
   return {
-    name: 'Account',
+    name: displayName,
+    email,
     avatar: {
-      src: '',
-      alt: 'Account'
+      src: avatarSrc,
+      alt: displayName
     }
   }
 })
@@ -39,9 +68,42 @@ async function handleLogout() {
   await router.push('/auth/login')
 }
 
+watch(
+  supabaseUser,
+  async (jwt) => {
+    const typed = jwt as JwtUser | null
+
+    if (!typed) {
+      profile.value = null
+      return
+    }
+
+    loadingProfile.value = true
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name,email')
+        .single<UserProfileRow>()
+
+      if (!error && data) {
+        profile.value = data
+      } else {
+        profile.value = null
+      }
+    } catch {
+      profile.value = null
+    } finally {
+      loadingProfile.value = false
+    }
+  },
+  { immediate: true }
+)
+
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
   label: user.value.name,
+  description: user.value.email || undefined,
   avatar: user.value.avatar
 }], [{
   label: 'Profile',

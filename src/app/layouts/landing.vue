@@ -13,11 +13,9 @@ defineOptions({
     >
       <template #left>
         <NuxtLink to="/" class="flex items-center gap-2.5">
-          <span class="inline-flex size-8 items-center justify-center rounded-lg bg-primary text-background">
-            <UIcon name="i-lucide-sun" class="size-4" />
-          </span>
+          <span class="inline-flex size-8 rounded-sm bg-primary" />
           <span class="text-lg font-medium text-highlighted">
-            Daylight
+            Project Daylight
           </span>
         </NuxtLink>
       </template>
@@ -70,11 +68,9 @@ defineOptions({
           <!-- Brand column -->
           <div class="space-y-4">
             <div class="flex items-center gap-2">
-              <span class="inline-flex size-7 items-center justify-center rounded-lg bg-primary text-background">
-                <UIcon name="i-lucide-sun" class="size-3.5" />
-              </span>
+              <span class="inline-flex size-7 rounded-sm bg-primary" />
               <span class="font-medium text-highlighted">
-                Daylight
+                Project Daylight
               </span>
             </div>
             <p class="text-xs text-muted">
@@ -137,14 +133,14 @@ defineOptions({
             </p>
             <ul class="space-y-2 text-sm">
               <li>
-                <a href="#" class="text-muted transition hover:text-highlighted">
+                <NuxtLink to="/privacy-policy" class="text-muted transition hover:text-highlighted">
                   Privacy
-                </a>
+                </NuxtLink>
               </li>
               <li>
-                <a href="#" class="text-muted transition hover:text-highlighted">
+                <NuxtLink to="/terms-and-conditions" class="text-muted transition hover:text-highlighted">
                   Terms
-                </a>
+                </NuxtLink>
               </li>
               <li>
                 <a href="#" class="text-muted transition hover:text-highlighted">
