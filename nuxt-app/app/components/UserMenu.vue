@@ -7,17 +7,37 @@ defineProps<{
 
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
+const supabase = useSupabaseClient()
+const supabaseUser = useSupabaseUser()
+const router = useRouter()
 
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
-const user = ref({
-  name: 'Benjamin Canac',
-  avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: 'Benjamin Canac'
+const user = computed(() => {
+  if (supabaseUser.value) {
+    return {
+      name: supabaseUser.value.email || 'Account',
+      avatar: {
+        src: supabaseUser.value.user_metadata?.avatar_url || '',
+        alt: supabaseUser.value.email || 'Account'
+      }
+    }
+  }
+
+  return {
+    name: 'Account',
+    avatar: {
+      src: '',
+      alt: 'Account'
+    }
   }
 })
+
+async function handleLogout() {
+  await supabase.auth.signOut()
+  await router.push('/auth/login')
+}
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
@@ -147,7 +167,11 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   target: '_blank'
 }, {
   label: 'Log out',
-  icon: 'i-lucide-log-out'
+  icon: 'i-lucide-log-out',
+  onSelect: (e: Event) => {
+    e.preventDefault()
+    handleLogout()
+  }
 }]]))
 </script>
 
@@ -160,7 +184,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     <UButton
       v-bind="{
         ...user,
-        label: collapsed ? undefined : user?.name,
+        label: collapsed ? undefined : user.name,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
       color="neutral"

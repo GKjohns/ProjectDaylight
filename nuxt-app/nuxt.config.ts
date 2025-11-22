@@ -22,11 +22,33 @@ export default defineNuxtConfig({
     }
   },
 
+  // Supabase configuration
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
     secretKey: process.env.SUPABASE_SECRET_KEY,
-    redirect: false
+    redirect: false,
+    redirectOptions: {
+      login: '/auth/login',
+      callback: '/auth/confirm',
+      include: undefined,
+      exclude: ['/auth/*', '/'],
+      saveRedirectToCookie: false
+    },
+    cookieOptions: {
+      maxAge: 60 * 60 * 8,
+      sameSite: 'lax',
+      secure: true
+    },
+    clientOptions: {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    },
+    types: false // Disable for now since we don't have the types file yet
   },
 
   compatibilityDate: '2024-07-11',

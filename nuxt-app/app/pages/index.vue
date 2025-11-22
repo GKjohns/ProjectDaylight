@@ -1,237 +1,145 @@
 <script setup lang="ts">
-import type { TimelineEvent } from '~/types'
-
-interface HomeSummary {
-  todayEvents: number
-  incidentsThisWeek: number
-  positiveThisWeek: number
-  nextCourtDate?: string
-  lastCaptureAt?: string
-}
-
-interface HomeResponse {
-  summary: HomeSummary
-  recentEvents: TimelineEvent[]
-}
-
-const { data, status } = await useFetch<HomeResponse>('/api/home', {
-  default: () => ({
-    summary: {
-      todayEvents: 0,
-      incidentsThisWeek: 0,
-      positiveThisWeek: 0,
-      nextCourtDate: undefined,
-      lastCaptureAt: undefined
-    },
-    recentEvents: []
-  }),
-  lazy: true
+definePageMeta({
+  layout: 'landing'
 })
 
-const router = useRouter()
+const heroTitle = 'Turn chaos into court‑ready clarity'
+const heroDescription = 'When life gets overwhelming, Daylight helps you capture, organize, and document everything—so you’re prepared for whatever comes next.'
 
-function formatDate(value?: string) {
-  if (!value) return 'Not set'
+const heroLinks = [
+  {
+    label: 'Start documenting',
+    icon: 'i-lucide-arrow-right',
+    color: 'primary',
+    to: '/capture'
+  },
+  {
+    label: 'View demo',
+    color: 'neutral',
+    variant: 'ghost' as const,
+    to: '/home'
+  }
+]
 
-  return new Date(value).toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+const features = [
+  {
+    icon: 'i-lucide-mic',
+    title: 'Voice capture',
+    description: 'Record incidents as they happen. AI transcribes and timestamps everything automatically.'
+  },
+  {
+    icon: 'i-lucide-clock',
+    title: 'Timeline view',
+    description: 'See everything in chronological order. Perfect for legal proceedings and therapy sessions.'
+  },
+  {
+    icon: 'i-lucide-folder-open',
+    title: 'Evidence vault',
+    description: 'Store screenshots, emails, and documents securely. Everything backed up and organized.'
+  },
+  {
+    icon: 'i-lucide-sparkles',
+    title: 'AI summaries',
+    description: 'Generate clear, factual summaries of events for attorneys, therapists, or support teams.'
+  },
+  {
+    icon: 'i-lucide-file-text',
+    title: 'Legal exports',
+    description: 'Export everything as PDFs with proper formatting for court submissions and legal teams.'
+  },
+  {
+    icon: 'i-lucide-shield',
+    title: 'Private & secure',
+    description: 'Your data is encrypted and never shared. You control who sees what, always.'
+  }
+] as const
 
-function formatDay(value?: string) {
-  if (!value) return '—'
+const cta = {
+  title: 'Start protecting yourself today',
+  description: 'Free to try. No credit card required.',
+  links: [
+    {
+      label: 'Get started free',
+      icon: 'i-lucide-arrow-right',
+      color: 'primary',
+      to: '/auth/signup'
+    }
+  ]
+} as const
 
-  return new Date(value).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    weekday: 'short'
-  })
-}
-
-function onQuickCapture() {
-  router.push('/capture')
-}
+useSeoMeta({
+  title: 'Daylight – Turn chaos into court‑ready clarity',
+  description: 'Project Daylight is an AI-powered evidence and timeline platform that transforms exhausted scribbles into court‑ready documentation for custody and family court.',
+  ogTitle: 'Daylight – Turn chaos into court‑ready clarity',
+  ogDescription: 'Transform exhausted scribbles into court‑ready evidence.'
+})
 </script>
 
 <template>
-  <UDashboardPanel id="home">
-    <template #header>
-      <UDashboardNavbar title="Home">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
-      </UDashboardNavbar>
-    </template>
+  <div>
+    <UPageHero
+      :title="heroTitle"
+      :description="heroDescription"
+      :links="heroLinks"
+      align="center"
+    >
+      <template #top>
+        <UBadge color="primary" variant="soft">
+          Court‑first journaling for chaotic seasons
+        </UBadge>
+      </template>
 
-    <template #body>
-      <div class="max-w-4xl space-y-6">
-        <UCard class="border border-primary/30 bg-primary/5">
-          <template #header>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <p class="font-semibold text-highlighted">
-                  Chaos → Capture
-                </p>
-                <p class="text-sm text-muted">
-                  One tap to record what happened. Daylight turns it into court‑ready evidence later.
-                </p>
-              </div>
-
-              <UButton
-                color="primary"
-                size="lg"
-                icon="i-lucide-mic"
-                class="w-full sm:w-auto"
-                @click="onQuickCapture"
-              >
-                Quick capture
-              </UButton>
-            </div>
-          </template>
-
-          <div class="grid gap-4 sm:grid-cols-3">
-            <div>
-              <p class="text-xs text-muted uppercase tracking-wide">
-                Today
-              </p>
-              <p class="mt-1 text-2xl font-semibold text-highlighted">
-                {{ data?.summary.todayEvents }}
-              </p>
-              <p class="text-xs text-muted">
-                events captured
-              </p>
-            </div>
-
-            <div>
-              <p class="text-xs text-muted uppercase tracking-wide">
-                This week
-              </p>
-              <p class="mt-1 text-sm text-muted">
-                <span class="font-semibold text-success">
-                  {{ data?.summary.positiveThisWeek }}
-                </span>
-                positive ·
-                <span class="font-semibold text-error">
-                  {{ data?.summary.incidentsThisWeek }}
-                </span>
-                incidents
-              </p>
-              <p class="text-xs text-muted">
-                Based on your dummy timeline data.
-              </p>
-            </div>
-
-            <div>
-              <p class="text-xs text-muted uppercase tracking-wide">
-                Next court date
-              </p>
-              <p class="mt-1 text-sm font-semibold text-highlighted">
-                {{ formatDay(data?.summary.nextCourtDate) }}
-              </p>
-              <p class="text-xs text-muted">
-                Last capture: {{ formatDate(data?.summary.lastCaptureAt) }}
-              </p>
-            </div>
-          </div>
-        </UCard>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <UCard>
-            <template #header>
-              <p class="font-medium text-highlighted">
-                Today’s summary (dummy)
-              </p>
-            </template>
-
-            <ul class="space-y-2 text-sm text-muted">
-              <li>
-                • You have {{ data?.summary.todayEvents }} documented event(s) today.
-              </li>
-              <li>
-                • Incidents and positives for this week are pre‑filled as static demo data.
-              </li>
-              <li>
-                • Replace this card later with real AI‑generated summaries.
-              </li>
-            </ul>
-          </UCard>
-
-          <UCard>
-            <template #header>
-              <p class="font-medium text-highlighted">
-                Where to go next
-              </p>
-            </template>
-
-            <div class="space-y-2 text-sm text-muted">
-              <p>
-                • Capture new audio or notes on the <NuxtLink to="/capture" class="text-primary underline">Capture</NuxtLink> page.
-              </p>
-              <p>
-                • Review everything in order in the <NuxtLink to="/timeline" class="text-primary underline">Timeline</NuxtLink>.
-              </p>
-              <p>
-                • Organize screenshots, emails, and documents in <NuxtLink to="/evidence" class="text-primary underline">Evidence</NuxtLink>.
-              </p>
-              <p>
-                • Ask natural language questions from the <NuxtLink to="/interpreter" class="text-primary underline">Interpreter</NuxtLink>.
-              </p>
-              <p>
-                • Generate packets in the <NuxtLink to="/export" class="text-primary underline">Export center</NuxtLink>.
-              </p>
-            </div>
-          </UCard>
+      <template #links>
+        <div class="flex flex-col items-center gap-3 sm:flex-row">
+          <UButton
+            v-for="(link, index) in heroLinks"
+            :key="index"
+            v-bind="link"
+            size="lg"
+          />
         </div>
+      </template>
 
-        <UCard>
-          <template #header>
-            <p class="font-medium text-highlighted">
-              Recent events
-            </p>
-          </template>
+      <template #default>
+        <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-muted">
+          <span class="flex items-center gap-2">
+            <UIcon name="i-lucide-shield-check" class="size-4 text-primary" />
+            End-to-end encrypted
+          </span>
+          <span class="flex items-center gap-2">
+            <UIcon name="i-lucide-lock" class="size-4 text-primary" />
+            HIPAA aligned
+          </span>
+          <span class="flex items-center gap-2">
+            <UIcon name="i-lucide-scale" class="size-4 text-primary" />
+            Built for court
+          </span>
+        </div>
+      </template>
+    </UPageHero>
 
-          <div v-if="status === 'pending'" class="flex items-center justify-center py-6">
-            <UIcon name="i-lucide-loader-2" class="size-5 text-muted animate-spin" />
-            <span class="ml-2 text-sm text-muted">Loading recent events…</span>
-          </div>
+    <UPageSection
+      title="Everything you need to protect yourself"
+      description="Simple tools that work when you need them most."
+    >
+      <UPageGrid>
+        <UPageCard
+          v-for="feature in features"
+          :key="feature.title"
+          v-bind="feature"
+          spotlight
+          highlight
+          variant="subtle"
+        />
+      </UPageGrid>
+    </UPageSection>
 
-          <div
-            v-else
-            class="space-y-3"
-          >
-            <div
-              v-for="event in data?.recentEvents"
-              :key="event.id"
-              class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b last:border-b-0 border-default pb-2 last:pb-0"
-            >
-              <div>
-                <p class="text-sm font-medium text-highlighted">
-                  {{ event.title }}
-                </p>
-                <p class="text-xs text-muted">
-                  {{ event.description }}
-                </p>
-              </div>
+    <USeparator />
 
-              <div class="flex flex-col items-start sm:items-end gap-1 text-xs text-muted">
-                <span>{{ formatDate(event.timestamp) }}</span>
-                <span v-if="event.location">{{ event.location }}</span>
-              </div>
-            </div>
-
-            <p
-              v-if="!data?.recentEvents.length"
-              class="text-sm text-muted text-center"
-            >
-              No recent events in the dummy dataset yet.
-            </p>
-          </div>
-        </UCard>
-      </div>
-    </template>
-  </UDashboardPanel>
+    <UPageCTA
+      v-bind="cta"
+      align="center"
+      variant="soft"
+    />
+  </div>
 </template>
-

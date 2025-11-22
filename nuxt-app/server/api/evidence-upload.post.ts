@@ -4,7 +4,7 @@ import { getSupabaseClient, getRequestUserId } from '../utils/supabaseClient'
 
 export default defineEventHandler(async (event) => {
   const supabase = await getSupabaseClient(event)
-  const userId = getRequestUserId(event)
+  const userId = await getRequestUserId(event)
 
   let tempFilePath: string | undefined
 
