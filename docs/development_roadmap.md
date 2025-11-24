@@ -188,6 +188,14 @@ This roadmap outlines the remaining development work for Project Daylight MVP, o
   - SEO optimization basics
 
 ### Product Polish
+
+- [ ] **🔥 CRITICAL: Fix production API routes** ⚠️ BLOCKER
+  - API routes work in dev mode but fail in Vercel production deployment
+  - Investigate Nuxt server route configuration for Vercel
+  - Test all API endpoints in production environment
+  - Verify environment variables are properly set
+  - Check serverless function configuration
+
 - [ ] **User onboarding flow**
   - Account creation streamlined
   - Initial data capture tutorial
@@ -327,6 +335,15 @@ After successful launch and initial revenue:
 ---
 
 ## Next Immediate Steps
+
+### Priority 0: Production API Fix 🚨 CRITICAL BLOCKER
+0. **Diagnose and fix Vercel production API failures**
+   - All API routes (`/api/*`) fail in production but work locally
+   - Likely issues: Nuxt serverless function configuration, environment variables, or runtime settings
+   - Test each endpoint systematically in production
+   - Verify OpenAI API key and Supabase credentials are set correctly in Vercel
+   - Check Vercel function logs for error details
+   - May need to adjust Nuxt config for Vercel serverless compatibility
 
 ### Priority 1: Screenshot & Photo Storage 🎯
 1. **End-to-end screenshot/photo flow**
