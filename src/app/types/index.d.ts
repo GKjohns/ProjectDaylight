@@ -62,14 +62,14 @@ export interface Range {
 export type EventType = 'positive' | 'incident' | 'medical' | 'school' | 'communication' | 'legal'
 
 export interface TimelineEvent {
-  id: number
+  id: string
   timestamp: string
   type: EventType
   title: string
   description: string
   participants: string[]
   location?: string
-  evidenceIds?: number[]
+  evidenceIds?: string[]
 }
 
 export type EvidenceSourceType = 'text' | 'email' | 'photo' | 'document'

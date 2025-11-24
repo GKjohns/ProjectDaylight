@@ -1,9 +1,46 @@
 <script setup lang="ts">
 import type { EventType, TimelineEvent } from '~/types'
 
-const { data, status } = await useFetch<TimelineEvent[]>('/api/timeline', {
-  default: () => [],
-  lazy: true
+// Use the same authentication pattern as evidence.vue
+const supabase = useSupabaseClient()
+const session = useSupabaseSession()
+
+const data = ref<TimelineEvent[]>([])
+const status = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
+const error = ref<any>(null)
+
+async function fetchTimeline() {
+  status.value = 'pending'
+  error.value = null
+
+  try {
+    // Get the current access token
+    const accessToken =
+      session.value?.access_token ||
+      (await supabase.auth.getSession()).data.session?.access_token
+
+    const result = await $fetch<TimelineEvent[]>('/api/timeline', {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
+    })
+
+    data.value = result || []
+    status.value = 'success'
+  } catch (e: any) {
+    console.error('[Timeline] Failed to fetch:', e)
+    error.value = e
+    status.value = 'error'
+    data.value = []
+  }
+}
+
+onMounted(() => {
+  fetchTimeline()
+})
+
+watch(session, (newSession) => {
+  if (newSession?.access_token) {
+    fetchTimeline()
+  }
 })
 
 const selectedType = ref<'all' | EventType>('all')
@@ -50,6 +87,21 @@ const filteredEvents = computed(() => {
   return data.value.filter(event => event.type === selectedType.value)
 })
 
+if (process.client) {
+  watchEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      '[Timeline] /api/timeline result:',
+      {
+        status: status.value,
+        error: error.value,
+        count: (data.value || []).length,
+        items: data.value
+      }
+    )
+  })
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString(undefined, {
     month: 'short',
@@ -84,7 +136,7 @@ function formatDate(value: string) {
     <template #body>
       <div class="space-y-4">
         <p class="text-sm text-muted">
-          Unified, chronological stream of events with clear types and linked evidence, using static dummy data from
+          Unified, chronological stream of events with clear types and linked evidence, loaded from your account via
           <code class="px-1 rounded bg-subtle text-xs text-muted border border-default">/api/timeline</code>.
         </p>
 
@@ -159,7 +211,7 @@ function formatDate(value: string) {
               No events for this filter
             </p>
             <p class="text-xs text-muted">
-              Adjust the type filter above to see more of the dummy timeline data.
+              Adjust the type filter above or start capturing events to populate your timeline.
             </p>
           </UCard>
         </div>
