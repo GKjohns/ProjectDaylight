@@ -1,421 +1,227 @@
-# Project Daylight - Development Roadmap
+# Project Daylight - Launch-Focused Roadmap
 
 *Last Updated: November 2024*
 
----
-
-## Progress Summary
-
-**Overall Status:** ~50% Complete
-
-- ✅ **Milestone 0:** Database Foundation - COMPLETE
-- ✅ **Milestone 1:** Real Data Capture & Storage - MOSTLY COMPLETE (OCR & photo-to-text live; camera capture pending)
-- ✅ **Milestone 2:** Evidence Management & Export - COMPLETE (Markdown + PDF export working)
-- ⏳ **Milestone 3:** AI Intelligence Layer - IN PROGRESS (LLM extraction & AI summaries live; chat & insights pending)
-- ⏳ **Milestone 4:** Landing Page & Polish - IN PROGRESS
-- ❌ **Milestone 5:** Launch Preparation - NOT STARTED (payments & production hardening)
-
-**Key Completed Features:**
-- Full database schema with RLS policies
-- Voice recording with OpenAI transcription
-- Structured event extraction from voice notes
-- Event storage and timeline display
-- Evidence file upload to Supabase storage
-- Evidence management UI
-- Working markdown + PDF export with real data
-- Home dashboard with real stats
-- Complete navigation structure
-
-**Critical Path Items:**
-1. ~~Voice capture → database~~ ✅
-2. ~~Export generation with real data~~ ✅
-3. ~~OCR integration for photos~~ ✅
-4. Natural language interpreter integration (Chat)
+**Goal: Launch in 2-3 weeks with current features + great experience**
 
 ---
 
-## Overview
+## Current Status
 
-This roadmap outlines the remaining development work for Project Daylight MVP, organized into 5 focused milestones that prioritize early functionality. Each milestone builds toward a launch-ready product that can start serving real users and generating revenue.
+### ✅ What's Working
+- Voice capture → transcription → event extraction → timeline
+- Evidence upload and management
+- Markdown + PDF export with real data
+- Timeline view with filtering
+- Basic dashboard with stats
+- OCR for uploaded images
 
-**Target Timeline:** 8-10 weeks to soft launch
+### 🔥 What's Broken
+- **CRITICAL:** All API routes fail in production (work in dev)
+- Manual auth header passing everywhere (poor DX)
+- No payments/subscriptions
+- Landing page needs work
+- No branding/polish
 
 ---
 
-## Milestone 0: Database Foundation ✅ COMPLETE
-*"Set up the data layer for everything else to build on"*
+## PHASE 1: Critical Fixes (Week 1)
+*"Make it actually work in production"*
 
-### Database Schema & Infrastructure
-- [x] **Design and implement core database schema**
-  - Events table (from voice_extraction_schema.md)
-  - Evidence/documents table
-  - Timeline entries linking events + evidence
-  - User profiles and authentication structure
-  - Audit trails for court credibility
+### 🚨 Priority 0: Fix Production API/Auth
+**THE BLOCKER - Nothing else matters until this works**
 
-- [x] **Set up Supabase tables and relationships**
-  - Row Level Security policies
-  - Indexes for performance
-  - Triggers for timestamps and audit logs
+- [ ] **Fix Vercel production deployment**
+  - Root cause: Broken Supabase server-side auth configuration
+  - Missing cookie configuration causing auth to fail in serverless
+  - Manual header passing pattern incompatible with production
   
-- [x] **Create database migration system**
-  - Initial schema migrations
-  - Seed data for development
-  - Migration documentation
+- [ ] **Immediate fixes needed:**
+  1. Add proper Supabase config to `nuxt.config.ts`:
+     - `cookieOptions` for session handling
+     - `serviceRole` key for server operations
+     - Correct domain/sameSite for production
+  2. Verify ALL environment variables in Vercel:
+     - SUPABASE_URL
+     - SUPABASE_KEY (anon)
+     - SUPABASE_SERVICE_ROLE_KEY
+     - NUXT_OPENAI_API_KEY
+  3. Test every endpoint in production
+  4. Monitor function logs for errors
+
+- [ ] **Quick auth cleanup** (if time permits):
+  - Remove manual header passing from critical paths
+  - Use `serverSupabaseClient` properly
+  - But don't let perfect be enemy of good
+
+**Success:** User can record voice note in production → see it in timeline
 
 ---
 
-## Milestone 1: Real Data Capture & Storage ✅ MOSTLY COMPLETE
-*"Make the capture features actually save data"*
+## PHASE 2: Launch Essentials (Week 2)
+*"Make it worth paying for"*
 
-### Core Capture Functionality
-- [x] **Connect voice capture to real storage**
-  - Save audio files to Supabase storage
-  - Store transcripts in database
-  - Link extracted events to timeline
-  - Store extraction metadata
-
-- [ ] **Implement screenshot/photo capture**
-  - Direct camera capture interface
-  - [x] Gallery upload functionality
-  - [ ] Store images in Supabase storage
-  - [x] Basic OCR integration (OpenAI vision or similar)
-  - [x] Extract text and save as evidence
-
-- [x] **File upload system**
-  - Document upload interface
-  - PDF, images, text files support
-  - Store in Supabase storage
-  - Extract metadata and searchable content
-
-### Timeline Integration
-- [x] **Connect timeline to real data**
-  - Display actual captured events
-  - Real-time updates on new captures
-  - Filter by date range and event type
-  - Link timeline events to evidence
-
----
-
-## Milestone 2: Evidence Management & Export ✅ COMPLETE
-*"Turn chaos into court-ready documentation"*
-
-### Evidence Repository
-- [x] **Full evidence management**
-  - Evidence preview system
-  - Full-text search implementation
-  - Evidence-to-event linking UI
-  - Tagging and categorization
-  - Evidence metadata display
-
-- [ ] **Email forwarding integration** (Future enhancement)
-  - Set up email ingestion endpoint
-  - Parse emails and attachments
-  - Auto-extract relevant information
-  - Add to timeline automatically
-
-### Export Functionality
-- [x] **Markdown export with real data**
-  - Chronological timeline export
-  - Include linked evidence
-  - Multiple focus options (full/incidents/positive)
-  - Configurable sections
-  - Copy to clipboard
-  - Rendered preview
-
-- [x] **PDF generation**
-  - Convert markdown to PDF
-  - Court-appropriate formatting
-  - Professional headers/footers
-  - Page numbers and dates
-
----
-
-## Milestone 3: AI Intelligence Layer ⏳ IN PROGRESS
-*"Add the smart features that differentiate us"*
-
-### Natural Language Interpreter
-- [ ] **Build chat interface with real data**
-  - Chat page created (placeholder)
-  - Integrate with OpenAI/Anthropic API
-  - Query against actual timeline/evidence
-  - Return citations with responses
-  - Save conversation history
-
-- [ ] **Common query templates**
-  - "What happened on [date]?"
-  - "Show all incidents this month"
-  - "Find patterns in [behavior]"
-  - "Summarize custody compliance"
-
-### Proactive Insights
-- [ ] **Basic pattern detection**
-  - Identify repeated incidents
-  - Flag timeline gaps
-  - Detect missing documentation
-  - Surface contradictions
-
-- [ ] **Smart notifications**
-  - Pattern alerts
-  - Documentation reminders
-  - Deadline notifications
-  - Evidence gap warnings
-
-### Enhanced Extraction
-- [x] **Improve voice extraction**
-  - Better temporal resolution
-  - Multi-event extraction refinement
-  - Confidence scoring
-  - Ambiguity handling
-
----
-
-## Milestone 4: Landing Page & Polish ⏳ IN PROGRESS
-*"Get ready for real users"*
-
-### Marketing Website
-- [x] **Landing page development**
-  - Hero section with clear value prop
-  - Feature highlights (3 core benefits)
-  - Pricing section ($49-99/month)
-  - Testimonials/use cases
-  - CTA for free trial signup
-
-- [ ] **Conversion optimization**
-  - A/B test ready infrastructure
-  - Analytics integration (Posthog/Mixpanel)
-  - Email capture for waitlist
-  - SEO optimization basics
-
-### Product Polish
-
-- [ ] **🔥 CRITICAL: Fix production API routes** ⚠️ BLOCKER
-  - API routes work in dev mode but fail in Vercel production deployment
-  - Investigate Nuxt server route configuration for Vercel
-  - Test all API endpoints in production environment
-  - Verify environment variables are properly set
-  - Check serverless function configuration
-
-- [ ] **User onboarding flow**
-  - Account creation streamlined
-  - Initial data capture tutorial
-  - Sample data for new users
-  - First capture success moment
-
-- [x] **UI/UX consistency improvements**
-  - [x] Standardize toast notification colors (neutral for info, error for failures)
-
-- [ ] **Critical bug fixes**
-  - Performance optimization
-  - Mobile responsiveness
-  - Cross-browser testing
-  - Error handling improvements
-
-- [ ] **Advanced exports**
-  - Word document generation
-  - CSV data export
-  - Custom date ranges
-  - Email delivery option
-
----
-
-## Milestone 5: Launch Preparation ❌ NOT STARTED
-*"Go live with paying customers"*
-
-### Payment & Subscriptions
+### Priority 1: Payments & Billing
 - [ ] **Stripe integration**
-  - Subscription management
+  - Subscription checkout ($49/month)
   - 7-day free trial
-  - Payment processing
-  - Billing portal
+  - Payment method management
+  - Cancel/resume flow
+  
+- [ ] **Billing page**
+  - Current plan display
+  - Usage stats (if applicable)
+  - Upgrade/downgrade options
+  - Invoice history
 
-- [ ] **Account management**
-  - User settings/profile
-  - Data export/portability
-  - Account deletion
-  - Privacy controls
+### Priority 2: Landing Page & Branding
+- [ ] **Professional landing page**
+  - Compelling hero: "Your Story, Protected"
+  - 3 key benefits (Evidence capture, Timeline, Court-ready exports)
+  - Pricing: Simple $49/month with 7-day trial
+  - Social proof (even if testimonials are hypothetical initially)
+  - Clear CTA: "Start Free Trial"
+  
+- [ ] **Brand identity**
+  - Consistent color scheme throughout app
+  - Professional logo (even if simple)
+  - Favicon
+  - Email templates for auth/billing
 
-### Production Readiness
-- [ ] **Infrastructure hardening**
-  - Error monitoring (Sentry)
-  - Performance monitoring
-  - Backup systems
-  - Security audit
-
-- [ ] **Legal/Compliance**
-  - [x] Terms of Service
-  - [x] Privacy Policy
-  - Data handling documentation
-  - HIPAA compliance basics
-
-### Go-to-Market
-- [ ] **Soft launch preparation**
-  - Beta user recruitment (10-20 users)
-  - Support documentation
-  - Feedback collection system
-  - Initial marketing materials
-
----
-
-## Development Principles
-
-### Priority Order
-1. **Make it work** - Functional before beautiful
-2. **Make it valuable** - Features users will pay for
-3. **Make it scalable** - But not over-engineered
-
-### Technical Decisions
-- **Database:** Supabase (already configured)
-- **File Storage:** Supabase Storage
-- **AI/LLM:** OpenAI API (already integrated)
-- **OCR:** Google Vision API or Tesseract
-- **PDF Generation:** Puppeteer or jsPDF
-- **Payments:** Stripe
-- **Analytics:** PostHog or Mixpanel
-- **Email:** SendGrid or Resend
-
-### Quality Gates
-Each milestone should meet these criteria before moving forward:
-- Core functionality works end-to-end
-- No critical bugs
-- Mobile responsive
-- Basic error handling
-- Can demo to potential user
+### Priority 3: Onboarding & First Experience
+- [ ] **Smooth signup flow**
+  - Email/password or Google OAuth
+  - Immediate access after signup (trial starts)
+  - Welcome email with getting started tips
+  
+- [ ] **First-use experience**
+  - Quick 3-step tutorial overlay
+  - Sample data for new users to explore
+  - First voice capture celebration
+  - Clear value demonstration
 
 ---
 
-## Success Metrics
+## PHASE 3: Polish & Launch Prep (Week 3)
+*"Make it feel professional"*
 
-### Milestone 1 Success ✅
-- ✅ Voice note → saved event in timeline
-- ✅ Photo upload → extracted text in evidence (via OCR on uploaded images)
+### Priority 4: Critical Polish
+- [ ] **Mobile responsiveness**
+  - Test all pages on mobile
+  - Fix breaking layouts
+  - Ensure capture works on mobile
+  
+- [ ] **Error handling**
+  - User-friendly error messages
+  - Fallback states for failures
+  - Loading states everywhere
+  
+- [ ] **Performance**
+  - Optimize bundle size
+  - Lazy load heavy components
+  - Cache API responses where sensible
 
-### Milestone 2 Success ✅
-- ✅ Generate real markdown from actual data
-- ✅ Search and find specific evidence
-
-### Milestone 3 Success ⏳
-- ❌ Ask "What happened yesterday?" → get real answer (placeholder exists, integration pending)
-- ❌ System identifies a pattern in actual data (not implemented)
-
-### Milestone 4 Success ❌
-- ❌ Landing page converts visitor to trial signup
-- ❌ New user successfully captures first event
-
-### Milestone 5 Success ❌
-- ❌ First paying customer
-- ❌ 10+ active trial users
-
----
-
-## Risk Mitigation
-
-### Technical Risks
-- **OCR accuracy:** Start with Google Vision API for reliability
-- **PDF generation complexity:** Use existing templates, iterate later
-- **AI costs:** Implement usage caps and monitoring
-
-### Market Risks
-- **User adoption:** Focus on Richmond family court community first
-- **Pricing sensitivity:** A/B test pricing, offer emergency packages
-- **Competition:** Move fast, focus on integration not features
-
----
-
-## Post-MVP Enhancements
-
-After successful launch and initial revenue:
-- Calendar integration
-- Voice speaker identification  
-- Multi-language support
-- Attorney collaboration features
-- Court filing integration
-- Mobile native apps
+### Priority 5: Production Readiness
+- [ ] **Monitoring & Analytics**
+  - Error tracking (Sentry)
+  - Basic analytics (Posthog)
+  - Conversion tracking
+  
+- [ ] **Support infrastructure**
+  - Help documentation (FAQ)
+  - Contact email/form
+  - Bug report mechanism
+  
+- [ ] **Legal requirements**
+  - ✅ Terms of Service (done)
+  - ✅ Privacy Policy (done)
+  - Cookie consent (if needed)
+  - Data deletion process
 
 ---
 
-## Next Immediate Steps
+## LAUNCH CHECKLIST
 
-### Priority 0: Production API & Authentication Fix 🚨 CRITICAL BLOCKER
-0. **Fix Vercel production API failures & Supabase auth configuration**
-   - **Production Issue:** All API routes (`/api/*`) fail in production but work locally
-   - **Root Cause Likely:** Broken Supabase server-side authentication configuration
-   
-   **Current Problems:**
-   - Every client-side API call manually passes auth headers: `{ Authorization: Bearer ${accessToken} }`
-   - Every server route manually extracts and validates these tokens
-   - Missing Supabase cookie configuration in `nuxt.config.ts`
-   - No service role key configured for server-side operations
-   
-   **Investigation Steps:**
-   1. Add proper Supabase configuration:
-      - Configure `cookieOptions` for proper session handling
-      - Add `serviceRole` key for server-side operations
-      - Set correct cookie domain/sameSite for production
-   2. Refactor authentication flow:
-      - Use built-in `serverSupabaseClient` instead of manual token extraction
-      - Let Supabase module handle auth cookies automatically
-      - Remove manual header passing from all client-side API calls
-   3. Verify environment variables in Vercel:
-      - SUPABASE_URL
-      - SUPABASE_KEY (anon key)
-      - SUPABASE_SERVICE_ROLE_KEY (for server operations)
-      - NUXT_OPENAI_API_KEY
-   4. Test each endpoint in production after fixes
+### Pre-Launch Testing
+- [ ] Full user journey in production (signup → capture → export)
+- [ ] Payment flow end-to-end
+- [ ] Mobile testing on real devices
+- [ ] Load testing (can handle 100 concurrent users?)
 
-### Priority 1: Screenshot & Photo Storage 🎯
-1. **End-to-end screenshot/photo flow**
-   - Make it one-click simple to take or pick a screenshot/photo and store it in Supabase
-   - Ensure uploaded images are visible and manageable in the Evidence view
-   - Wire captured photos into the same `evidence` records used by exports and the timeline
+### Launch Day
+- [ ] Monitoring dashboard ready
+- [ ] Support email monitored
+- [ ] Team available for hotfixes
+- [ ] Backup/rollback plan ready
 
-### Priority 2: Refactor Authentication Pattern (Medium Priority)
-2. **Clean up Supabase authentication implementation**
-   - **Issue:** Currently using manual auth header passing instead of Supabase's built-in patterns
-   - **Impact:** Code duplication, maintenance burden, potential security issues
-   
-   **Required Changes:**
-   - Properly configure `@nuxtjs/supabase` module with:
-     - Cookie options for session management
-     - Service role configuration
-     - Correct redirect handling
-   - Refactor all client-side API calls to remove manual header passing
-   - Update server routes to use `serverSupabaseClient` with automatic auth
-   - Remove the manual token extraction/validation pattern from all API routes
-   - Test thoroughly in both dev and production environments
-   
-   **Expected Benefits:**
-   - Cleaner, more maintainable code
-   - Better security (cookies are httpOnly by default)
-   - Automatic session refresh handling
-   - Consistent auth across SSR and client-side rendering
-
-### Priority 3: Connect AI Chat
-3. **Natural Language Interface** - Enable chat functionality
-   - Integrate LLM API (OpenAI/Anthropic)
-   - Query against timeline/evidence data
-   - Add citation support
-   - Save conversation history for later review
-
-### Priority 4: Complete Photo Capture & OCR
-4. **Photo capture & OCR polish**
-   - Add/direct camera capture UX (where supported)
-   - Smooth the Image → Communications Evidence workflow
-   - Make sure OCR'd text is clearly linked to evidence records
-
-### Priority 5: PDF Export Enhancement (Optional)
-5. **PDF Generation** - Convert markdown to PDF format
-   - Use Puppeteer or jsPDF
-   - Professional formatting
-   - Court-ready output
-   
-### Quick Wins for Momentum
-- ✅ ~~Get one complete flow working: Voice → Event → Timeline~~ DONE
-- ✅ ~~Complete flow: Voice → Event → Timeline → Markdown export~~ DONE
-- ⏳ Build chat integration for natural language queries
-- ⏳ Deploy to staging for testing
-- Recruit 3-5 alpha testers
+### Success Metrics
+- [ ] 10 trial signups in first week
+- [ ] 3 conversions to paid in first month
+- [ ] <5% error rate in production
+- [ ] <3s page load times
 
 ---
 
-*Remember: The goal is paying customers in 10 weeks, not perfection. Ship early, iterate based on real user feedback.*
+## POST-LAUNCH: Future Enhancements
+*After we have paying customers and validated product-market fit*
+
+### Month 2-3
+- [ ] AI Chat interface (natural language queries)
+- [ ] Direct camera capture for photos
+- [ ] Email forwarding for evidence
+- [ ] Advanced search/filtering
+
+### Month 4-6
+- [ ] Pattern detection & insights
+- [ ] Attorney collaboration features
+- [ ] Calendar integration
+- [ ] Multi-language support
+
+### Month 6+
+- [ ] Mobile native apps
+- [ ] Voice speaker identification
+- [ ] Court filing integration
+- [ ] HIPAA compliance
+
+---
+
+## Development Philosophy for Launch
+
+### Do's ✅
+- Ship with bugs rather than not ship
+- Focus on core value: capture → timeline → export
+- Make payment easy
+- Polish what users see most
+
+### Don'ts ❌
+- Add new features before launch
+- Perfect the codebase
+- Over-engineer solutions
+- Wait for perfect conditions
+
+### Remember
+**Goal: Get 10 paying customers in first month, not build perfect product**
+
+Every day without paying customers is a day without validation. Launch lean, iterate based on real feedback.
+
+---
+
+## Next 48 Hours Action Items
+
+1. **Today:**
+   - [ ] Diagnose production API issue
+   - [ ] Check all Vercel env variables
+   - [ ] Try minimal fix to get API working
+
+2. **Tomorrow:**
+   - [ ] Test voice flow in production
+   - [ ] Begin Stripe integration
+   - [ ] Draft new landing page copy
+
+3. **This Week:**
+   - [ ] Complete Phase 1 (Critical Fixes)
+   - [ ] Start Phase 2 (Launch Essentials)
+
+---
+
+*Last thought: Perfect is the enemy of shipped. Your current feature set (voice → timeline → export) is already valuable. Focus on making that experience smooth and getting it in front of users who need it.*
