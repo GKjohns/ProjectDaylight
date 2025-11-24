@@ -81,6 +81,13 @@ export default defineNuxtConfig({
     ]
   },
 
+  // Ensure tslib helpers are bundled with the server for Vercel runtime
+  nitro: {
+    externals: {
+      inline: ['tslib']
+    }
+  },
+
   eslint: {
     config: {
       stylistic: {
