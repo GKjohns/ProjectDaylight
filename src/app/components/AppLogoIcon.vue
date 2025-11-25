@@ -6,34 +6,19 @@
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <!-- Sky blue rounded square base -->
-    <rect
-      x="20"
-      y="20"
-      width="360"
-      height="360"
-      rx="48"
-      ry="48"
-      class="fill-sky-500 dark:fill-sky-400"
-    />
-
-    <!-- Amber sun corner fold - curved page peel -->
+    <!-- Sky blue rounded square with perfectly circular bite -->
     <path
-      d="M20 72 
-         Q20 20 72 20
-         L180 20
-         Q115 125 20 250
+      d="M68 20
+         L380 20
+         Q400 20 400 68
+         L400 332
+         Q400 380 332 380
+         L68 380
+         Q20 380 20 332
+         L20 180
+         A160 160 0 0 0 180 20
          Z"
-      class="fill-amber-400 dark:fill-amber-300"
-    />
-
-    <!-- Subtle highlight on the fold edge for depth -->
-    <path
-      d="M180 20
-         Q115 125 20 250"
-      class="stroke-amber-300/50 dark:stroke-amber-200/40"
-      stroke-width="3"
-      fill="none"
+      class="fill-sky-500 dark:fill-sky-400"
     />
   </svg>
 </template>
