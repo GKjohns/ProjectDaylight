@@ -23,6 +23,8 @@ interface CaseRow {
   next_court_date: string | null
   created_at: string
   updated_at: string
+  lawyer_name: string | null
+  lawyer_email: string | null
 }
 
 interface CaseResponse {
@@ -68,6 +70,8 @@ const goalsSummary = ref('')
 const riskFlags = ref<string[]>([])
 const notes = ref('')
 const nextCourtDate = ref<string | null>(null)
+const lawyerName = ref('')
+const lawyerEmail = ref('')
 
 const stateOptions = [
   'Alabama',
@@ -209,6 +213,8 @@ function applyCase(current: CaseRow | null) {
   riskFlags.value = current.risk_flags ?? []
   notes.value = current.notes ?? ''
   nextCourtDate.value = current.next_court_date
+  lawyerName.value = current.lawyer_name ?? ''
+  lawyerEmail.value = current.lawyer_email ?? ''
   lastSavedAt.value = current.updated_at
   hasLoadedOnce.value = true
 }
@@ -257,7 +263,9 @@ async function saveCase() {
       goalsSummary: goalsSummary.value || null,
       riskFlags: riskFlags.value,
       notes: notes.value || null,
-      nextCourtDate: nextCourtDate.value || null
+      nextCourtDate: nextCourtDate.value || null,
+      lawyerName: lawyerName.value || null,
+      lawyerEmail: lawyerEmail.value || null
     }
 
     const result = await $fetch<CaseSaveResponse>('/api/case', {
@@ -660,6 +668,34 @@ watch(session, (newSession) => {
                           class="w-full"
                         />
                       </label>
+
+                      <div class="pt-2 space-y-2">
+                        <p class="text-[11px] font-medium uppercase tracking-wide text-muted">
+                          Your lawyer (optional)
+                        </p>
+
+                        <label class="space-y-1 block">
+                          <span class="text-xs font-medium text-highlighted">Lawyer name</span>
+                          <UInput
+                            v-model="lawyerName"
+                            placeholder="Attorney Jordan Lee"
+                            class="w-full"
+                          />
+                        </label>
+
+                        <label class="space-y-1 block">
+                          <span class="text-xs font-medium text-highlighted">Lawyer email</span>
+                          <UInput
+                            v-model="lawyerEmail"
+                            type="email"
+                            placeholder="jordan.lee@firm.com"
+                            class="w-full"
+                          />
+                          <span class="text-[11px] text-muted">
+                            Saved here so Daylight can help you email case summaries to your lawyer later.
+                          </span>
+                        </label>
+                      </div>
                     </div>
                   </div>
 

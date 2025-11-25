@@ -196,6 +196,8 @@ export type Database = {
           id: string
           jurisdiction_county: string | null
           jurisdiction_state: string | null
+          lawyer_email: string | null
+          lawyer_name: string | null
           next_court_date: string | null
           notes: string | null
           opposing_party_name: string | null
@@ -219,6 +221,8 @@ export type Database = {
           id?: string
           jurisdiction_county?: string | null
           jurisdiction_state?: string | null
+          lawyer_email?: string | null
+          lawyer_name?: string | null
           next_court_date?: string | null
           notes?: string | null
           opposing_party_name?: string | null
@@ -242,6 +246,8 @@ export type Database = {
           id?: string
           jurisdiction_county?: string | null
           jurisdiction_state?: string | null
+          lawyer_email?: string | null
+          lawyer_name?: string | null
           next_court_date?: string | null
           notes?: string | null
           opposing_party_name?: string | null

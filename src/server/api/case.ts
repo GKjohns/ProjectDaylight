@@ -19,6 +19,8 @@ interface CaseRow {
   risk_flags: string[] | null
   notes: string | null
   next_court_date: string | null
+  lawyer_name: string | null
+  lawyer_email: string | null
   created_at: string
   updated_at: string
 }
@@ -59,6 +61,8 @@ export default eventHandler(async (event) => {
         'risk_flags',
         'notes',
         'next_court_date',
+        'lawyer_name',
+        'lawyer_email',
         'created_at',
         'updated_at'
       ].join(', ')

@@ -37,6 +37,8 @@ const router = useRouter()
 
 const evidenceId = computed(() => route.params.id as string)
 
+const isDeleting = ref(false)
+
 const {
   data,
   status,
@@ -118,6 +120,28 @@ function sourceIcon(type: EvidenceItem['sourceType']) {
 
 // Check if the evidence can be previewed
 const canPreview = computed(() => hasImage.value)
+
+async function deleteEvidence(close?: () => void) {
+  if (!evidenceId.value) return
+
+  isDeleting.value = true
+  try {
+    await $fetch(`/api/evidence/${evidenceId.value}`, {
+      method: 'DELETE'
+    })
+
+    if (close) {
+      close()
+    }
+
+    await router.push('/evidence')
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to delete evidence:', err)
+  } finally {
+    isDeleting.value = false
+  }
+}
 </script>
 
 <template>
@@ -129,14 +153,61 @@ const canPreview = computed(() => hasImage.value)
         </template>
 
         <template #right>
-          <UButton
-            icon="i-lucide-arrow-left"
-            color="neutral"
-            variant="ghost"
-            to="/evidence"
-          >
-            Back to Evidence
-          </UButton>
+          <div class="flex items-center gap-2">
+            <UModal
+              v-if="status === 'success' && data"
+              title="Delete evidence"
+              :ui="{ footer: 'justify-end' }"
+            >
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                size="sm"
+              >
+                Delete
+              </UButton>
+
+              <template #body>
+                <div class="space-y-2">
+                  <p class="text-sm">
+                    This will permanently delete this evidence item.
+                  </p>
+                  <p class="text-xs text-muted">
+                    Any events, communications, or suggestions that reference this evidence will remain,
+                    but their links to this evidence will be removed or set to empty by the database.
+                  </p>
+                </div>
+              </template>
+
+              <template #footer="{ close }">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  @click="close"
+                >
+                  Cancel
+                </UButton>
+                <UButton
+                  color="error"
+                  variant="solid"
+                  :loading="isDeleting"
+                  @click="deleteEvidence(close)"
+                >
+                  Delete evidence
+                </UButton>
+              </template>
+            </UModal>
+
+            <UButton
+              icon="i-lucide-arrow-left"
+              color="neutral"
+              variant="ghost"
+              to="/evidence"
+            >
+              Back to Evidence
+            </UButton>
+          </div>
         </template>
       </UDashboardNavbar>
     </template>

@@ -167,6 +167,8 @@ const welfareImpactOptions: { label: string; value: WelfareImpact }[] = [
 ]
 
 const isSaving = ref(false)
+const isDeleting = ref(false)
+const deleteOrphanEvidence = ref(false)
 
 const editableTimestamp = computed({
   get() {
@@ -268,6 +270,31 @@ async function saveEdits(close?: () => void) {
     console.error('Failed to save event edits:', err)
   } finally {
     isSaving.value = false
+  }
+}
+
+async function deleteEventHandler(deleteEvidence: boolean, close?: () => void) {
+  if (!eventId.value) return
+
+  isDeleting.value = true
+
+  try {
+    const query = deleteEvidence ? '?deleteOrphanEvidence=true' : ''
+
+    await $fetch(`/api/event/${eventId.value}${query}`, {
+      method: 'DELETE'
+    })
+
+    if (close) {
+      close()
+    }
+
+    await router.push('/timeline')
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to delete event:', err)
+  } finally {
+    isDeleting.value = false
   }
 }
 </script>
@@ -448,6 +475,62 @@ async function saveEdits(close?: () => void) {
                   @click="saveEdits(close)"
                 >
                   Save changes
+                </UButton>
+              </template>
+            </UModal>
+
+            <UModal
+              v-if="status === 'success' && data"
+              title="Delete event"
+              :ui="{ footer: 'justify-end' }"
+            >
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                size="sm"
+              >
+                Delete
+              </UButton>
+
+              <template #body>
+                <div class="space-y-3">
+                  <p class="text-sm">
+                    This will permanently delete this event from your timeline.
+                  </p>
+                  <p class="text-xs text-muted">
+                    Event participants, evidence mentions, patterns, suggestions, and other linked rows
+                    will be cleaned up automatically by the database. Action items will remain but
+                    will no longer be linked to this event.
+                  </p>
+                  <UFormField
+                    name="deleteAssociatedEvidence"
+                    label="Also delete associated evidence?"
+                    description="If enabled, any evidence that is only linked to this event (and not used elsewhere) will also be deleted."
+                  >
+                    <USwitch
+                      v-model="deleteOrphanEvidence"
+                      label="Delete evidence that is only linked to this event"
+                    />
+                  </UFormField>
+                </div>
+              </template>
+
+              <template #footer="{ close }">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  @click="close"
+                >
+                  Cancel
+                </UButton>
+                <UButton
+                  color="error"
+                  variant="solid"
+                  :loading="isDeleting"
+                  @click="deleteEventHandler(deleteOrphanEvidence, close)"
+                >
+                  Delete event
                 </UButton>
               </template>
             </UModal>

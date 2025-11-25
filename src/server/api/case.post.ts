@@ -19,6 +19,8 @@ interface CasePayload {
   riskFlags?: string[] | null
   notes?: string | null
   nextCourtDate?: string | null
+  lawyerName?: string | null
+  lawyerEmail?: string | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -62,7 +64,9 @@ export default defineEventHandler(async (event) => {
     goals_summary: body.goalsSummary ?? null,
     risk_flags: body.riskFlags ?? [],
     notes: body.notes ?? null,
-    next_court_date: body.nextCourtDate ?? null
+    next_court_date: body.nextCourtDate ?? null,
+    lawyer_name: body.lawyerName ?? null,
+    lawyer_email: body.lawyerEmail ?? null
   }
 
   let result

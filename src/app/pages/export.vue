@@ -18,6 +18,8 @@ interface CaseRow {
   next_court_date: string | null
   risk_flags: string[] | null
   updated_at: string
+  lawyer_name?: string | null
+  lawyer_email?: string | null
 }
 
 interface CaseResponse {
@@ -126,6 +128,11 @@ function applyCase(row: CaseRow | null) {
       }
     }
     courtName.value = pieces.join(' - ')
+  }
+
+  // Default "Prepared for" to the lawyer's name if available and not already set
+  if (!recipient.value.trim() && row.lawyer_name) {
+    recipient.value = row.lawyer_name
   }
 
   if (!overviewNotes.value.trim()) {

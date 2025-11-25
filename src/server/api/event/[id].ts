@@ -157,7 +157,7 @@ function mapEventToDetailResponse(
   }
 }
 
-export default eventHandler(async (event): Promise<EventDetailResponse> => {
+export default eventHandler(async (event): Promise<EventDetailResponse | { success: boolean; deletedEventId?: string; deletedEvidenceIds?: string[] }> => {
   const supabase = await serverSupabaseServiceRole(event)
   const eventId = getRouterParam(event, 'id')
   
@@ -179,11 +179,155 @@ export default eventHandler(async (event): Promise<EventDetailResponse> => {
     })
   }
 
-  const method = getMethod(event)
+  const method = getMethod(event)?.toUpperCase() || 'GET'
 
-  if (method && method.toUpperCase() !== 'GET') {
+  if (method === 'DELETE') {
+    // Optional flag to also delete evidence that is only linked to this event.
+    const query = getQuery(event)
+    const deleteOrphanEvidenceParam = (query.deleteOrphanEvidence ?? query.delete_orphan_evidence) as string | string[] | undefined
+    const deleteOrphanEvidence =
+      Array.isArray(deleteOrphanEvidenceParam)
+        ? deleteOrphanEvidenceParam.includes('true') || deleteOrphanEvidenceParam.includes('1')
+        : deleteOrphanEvidenceParam === 'true' || deleteOrphanEvidenceParam === '1'
+
+    // Ensure the event exists and belongs to the current user.
+    const { data: eventRow, error: eventError } = await supabase
+      .from('events')
+      .select('id, user_id')
+      .eq('id', eventId)
+      .eq('user_id', userId)
+      .single()
+
+    if (eventError || !eventRow) {
+      console.error('Supabase select event error (delete event):', eventError)
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Event not found.'
+      })
+    }
+
+    let orphanEvidenceIds: string[] = []
+
+    if (deleteOrphanEvidence) {
+      // Find all evidence linked to this event.
+      const { data: links, error: linksError } = await supabase
+        .from('event_evidence')
+        .select('evidence_id')
+        .eq('event_id', eventId)
+
+      if (linksError) {
+        console.error('Supabase select event_evidence error (delete event):', linksError)
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'Failed to inspect linked evidence.'
+        })
+      }
+
+      const evidenceIds = Array.from(
+        new Set(
+          (links || []).map((row: EventEvidenceRow) => row.evidence_id as string)
+        )
+      )
+
+      if (evidenceIds.length) {
+        // Find evidence that is shared with other events.
+        const { data: sharedLinks, error: sharedError } = await supabase
+          .from('event_evidence')
+          .select('evidence_id, event_id')
+          .in('evidence_id', evidenceIds)
+          .neq('event_id', eventId)
+
+        if (sharedError) {
+          console.error('Supabase select shared event_evidence error (delete event):', sharedError)
+          throw createError({
+            statusCode: 500,
+            statusMessage: 'Failed to inspect linked evidence.'
+          })
+        }
+
+        const sharedEvidenceIds = new Set(
+          (sharedLinks || []).map((row: any) => row.evidence_id as string)
+        )
+
+        orphanEvidenceIds = evidenceIds.filter((id) => !sharedEvidenceIds.has(id))
+
+        if (orphanEvidenceIds.length) {
+          // Fetch storage paths before deleting evidence rows so we can clean up files.
+          const { data: orphanEvidenceRows, error: orphanSelectError } = await supabase
+            .from('evidence')
+            .select('id, storage_path')
+            .in('id', orphanEvidenceIds)
+            .eq('user_id', userId)
+
+          if (orphanSelectError) {
+            console.error('Supabase select orphan evidence error (delete event):', orphanSelectError)
+            throw createError({
+              statusCode: 500,
+              statusMessage: 'Failed to load orphan evidence.'
+            })
+          }
+
+          const { error: deleteEvidenceError } = await supabase
+            .from('evidence')
+            .delete()
+            .in('id', orphanEvidenceIds)
+            .eq('user_id', userId)
+
+          if (deleteEvidenceError) {
+            console.error('Supabase delete orphan evidence error (delete event):', deleteEvidenceError)
+            throw createError({
+              statusCode: 500,
+              statusMessage: 'Failed to delete associated evidence.'
+            })
+          }
+
+          // Best-effort cleanup of any underlying storage objects.
+          const bucket = 'daylight-files'
+          const storagePaths = (orphanEvidenceRows || [])
+            .map((row: any) => row.storage_path as string | null)
+            .filter((p): p is string => Boolean(p))
+
+          if (storagePaths.length) {
+            const { error: storageError } = await supabase.storage
+              .from(bucket)
+              .remove(storagePaths)
+
+            if (storageError) {
+              // eslint-disable-next-line no-console
+              console.error('Failed to delete orphan evidence files from storage:', storageError)
+            }
+          }
+        }
+      }
+    }
+
+    // Finally, delete the event itself. Related rows like event_evidence,
+    // event_participants, evidence_mentions, event_patterns, and suggestions
+    // are handled by database-level ON DELETE rules.
+    const { error: deleteEventError } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', eventId)
+      .eq('user_id', userId)
+
+    if (deleteEventError) {
+      console.error('Supabase delete event error:', deleteEventError)
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to delete event.'
+      })
+    }
+
+    return {
+      success: true,
+      deletedEventId: eventId,
+      deletedEvidenceIds: orphanEvidenceIds
+    }
+  }
+
+  if (method !== 'GET') {
     // Handle simple PATCH/PUT-style updates for core event fields.
-    if (method.toUpperCase() !== 'PATCH' && method.toUpperCase() !== 'PUT') {
+    if (method !== 'PATCH' && method !== 'PUT') {
       throw createError({
         statusCode: 405,
         statusMessage: 'Method not allowed'

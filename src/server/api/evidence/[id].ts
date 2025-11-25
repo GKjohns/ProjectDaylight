@@ -110,7 +110,7 @@ function mapEvidenceToDetailResponse(
   }
 }
 
-export default eventHandler(async (event): Promise<EvidenceDetailResponse> => {
+export default eventHandler(async (event): Promise<EvidenceDetailResponse | { success: boolean }> => {
   const supabase = await serverSupabaseServiceRole(event)
   const evidenceIdParam = getRouterParam(event, 'id')
 
@@ -143,6 +143,56 @@ export default eventHandler(async (event): Promise<EvidenceDetailResponse> => {
       statusCode: 401,
       statusMessage: 'Unauthorized - Please log in'
     })
+  }
+
+  const method = getMethod(event)?.toUpperCase() || 'GET'
+
+  // Handle DELETE for hard-deleting an evidence item (and letting FKs cascade).
+  if (method === 'DELETE') {
+    // Fetch the evidence first so we can also clean up any stored file path.
+    const { data: evidenceRow, error: evidenceError } = await supabase
+      .from('evidence')
+      .select('id, user_id, storage_path')
+      .eq('id', evidenceId)
+      .eq('user_id', userId)
+      .single()
+
+    if (evidenceError || !evidenceRow) {
+      console.error('Supabase select evidence error (delete evidence):', evidenceError)
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Evidence not found.'
+      })
+    }
+
+    const { error: deleteError } = await supabase
+      .from('evidence')
+      .delete()
+      .eq('id', evidenceId)
+      .eq('user_id', userId)
+
+    if (deleteError) {
+      console.error('Supabase delete evidence error:', deleteError)
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to delete evidence.'
+      })
+    }
+
+    // Best-effort cleanup of the underlying storage object, if any.
+    if (evidenceRow.storage_path) {
+      const bucket = 'daylight-files'
+      const { error: storageError } = await supabase.storage
+        .from(bucket)
+        .remove([evidenceRow.storage_path])
+
+      if (storageError) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to delete evidence file from storage:', storageError)
+      }
+    }
+
+    return { success: true }
   }
 
   // Fetch the evidence
