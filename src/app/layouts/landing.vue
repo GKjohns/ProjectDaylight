@@ -70,8 +70,8 @@ defineOptions({
 
       <UNavigationMenu
         :items="[
-          { label: 'Privacy Policy', to: '/privacy-policy' },
-          { label: 'Terms of Service', to: '/terms-and-conditions' }
+          { label: 'Privacy Policy', to: '/privacy' },
+          { label: 'Terms of Service', to: '/terms' }
         ]"
         variant="link"
       />

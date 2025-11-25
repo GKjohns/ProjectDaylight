@@ -34,8 +34,8 @@ export default defineNuxtConfig({
     '/auth/login': { prerender: true },
     '/auth/signup': { prerender: true },
     '/auth/confirm': { prerender: true },
-    '/privacy-policy': { prerender: true },
-    '/terms-and-conditions': { prerender: true },
+    '/privacy': { prerender: true },
+    '/terms': { prerender: true },
     // API routes
     '/api/**': {
       cors: true
@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/auth/login',
       callback: '/auth/confirm',
-      exclude: ['/', '/auth/**', '/privacy-policy', '/terms-and-conditions']
+      exclude: ['/', '/auth/**', '/privacy', '/terms']
     },
     // Cookie configuration for serverless environments
     cookieOptions: {

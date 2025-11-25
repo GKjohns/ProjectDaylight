@@ -176,11 +176,11 @@ watchEffect(() => {
 
       <p class="text-[11px] leading-relaxed text-muted text-center">
         By continuing, you agree to our
-        <NuxtLink to="/terms-and-conditions" class="underline underline-offset-2 hover:text-highlighted">
+        <NuxtLink to="/terms" class="underline underline-offset-2 hover:text-highlighted">
           Terms of Service
         </NuxtLink>
         and
-        <NuxtLink to="/privacy-policy" class="underline underline-offset-2 hover:text-highlighted">
+        <NuxtLink to="/privacy" class="underline underline-offset-2 hover:text-highlighted">
           Privacy Policy
         </NuxtLink>.
       </p>
