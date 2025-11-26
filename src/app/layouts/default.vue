@@ -41,13 +41,27 @@ const links = [[{
   label: 'Journal',
   icon: 'i-lucide-book-open',
   to: '/journal',
-  onSelect: () => {
-    open.value = false
-  }
-}, {
-  label: 'Capture',
-  icon: 'i-lucide-mic',
-  to: '/capture',
+  defaultOpen: true,
+  children: [
+    {
+      label: 'New entry',
+      description: 'Capture a new journal entry',
+      icon: 'i-lucide-pen-line',
+      to: '/journal/new',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'All entries',
+      description: 'Browse your journal history',
+      icon: 'i-lucide-list',
+      to: '/journal',
+      onSelect: () => {
+        open.value = false
+      }
+    }
+  ],
   onSelect: () => {
     open.value = false
   }
@@ -66,9 +80,30 @@ const links = [[{
     open.value = false
   }
 }, {
-  label: 'Export',
+  label: 'Exports',
   icon: 'i-lucide-file-down',
-  to: '/export',
+  to: '/exports',
+  defaultOpen: true,
+  children: [
+    {
+      label: 'New export',
+      description: 'Generate a court-ready export',
+      icon: 'i-lucide-plus',
+      to: '/exports/new',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'All exports',
+      description: 'View your saved exports',
+      icon: 'i-lucide-list',
+      to: '/exports',
+      onSelect: () => {
+        open.value = false
+      }
+    }
+  ],
   onSelect: () => {
     open.value = false
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EvidenceItem, TimelineEvent, EventType } from '~/types'
+import type { EvidenceItem, TimelineEvent, EventType, SavedExport, ExportFocus, ExportMetadata } from '~/types'
 
 // Supabase session; data fetching uses cookie-based auth via useFetch
 const session = useSupabaseSession()
@@ -26,11 +26,25 @@ interface CaseResponse {
   case: CaseRow | null
 }
 
+interface ExportsResponse {
+  exports: SavedExport[]
+}
+
+// Fetch saved exports
+const {
+  data: exportsData,
+  status: exportsStatus,
+  refresh: refreshExports
+} = await useFetch<ExportsResponse>('/api/exports', {
+  headers: useRequestHeaders(['cookie'])
+})
+
+const savedExports = computed(() => exportsData.value?.exports || [])
+
 // Data from API via SSR-aware useFetch and cookie-based auth
 const {
   data: timelineData,
   status: timelineStatus,
-  error: timelineError,
   refresh: refreshTimeline
 } = await useFetch<TimelineEvent[]>('/api/timeline', {
   headers: useRequestHeaders(['cookie'])
@@ -39,7 +53,6 @@ const {
 const {
   data: evidenceData,
   status: evidenceStatus,
-  error: evidenceError,
   refresh: refreshEvidence
 } = await useFetch<EvidenceItem[]>('/api/evidence', {
   headers: useRequestHeaders(['cookie'])
@@ -48,7 +61,6 @@ const {
 const {
   data: caseResponse,
   status: caseStatus,
-  error: caseError,
   refresh: refreshCase
 } = await useFetch<CaseResponse>('/api/case', {
   headers: useRequestHeaders(['cookie'])
@@ -61,8 +73,6 @@ watch(caseResponse, (res) => {
 }, { immediate: true })
 
 // Export form state
-type ExportFocus = 'full-timeline' | 'incidents-only' | 'positive-parenting'
-
 const exportFocus = ref<ExportFocus>('full-timeline')
 const includeEvidenceIndex = ref(true)
 const includeOverview = ref(true)
@@ -75,13 +85,21 @@ const overviewNotes = ref('')
 
 const markdown = ref('')
 const generating = ref(false)
+const saving = ref(false)
 const copied = ref(false)
 const showRendered = ref(false)
 const pdfGenerating = ref(false)
-const viewMode = ref<'configure' | 'preview'>('configure')
+const viewMode = ref<'configure' | 'preview' | 'history'>('configure')
 const lastGeneratedAt = ref<string | null>(null)
 const aiSummary = ref<string | null>(null)
 const summaryGenerating = ref(false)
+
+// Currently viewing/editing export
+const currentExportId = ref<string | null>(null)
+const currentExportTitle = ref('')
+const isEditingTitle = ref(false)
+const deleteConfirmOpen = ref(false)
+const exportToDelete = ref<SavedExport | null>(null)
 
 const isLoadingData = computed(
   () =>
@@ -208,6 +226,27 @@ function formatDate(value?: string) {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) {
+    return 'Today'
+  } else if (diffDays === 1) {
+    return 'Yesterday'
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`
+  } else {
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    })
+  }
 }
 
 function formatEventType(type: EventType) {
@@ -376,9 +415,63 @@ async function generateAISummary() {
   }
 }
 
+async function saveExport(markdownContent: string) {
+  saving.value = true
+
+  try {
+    const title = caseTitle.value.trim() || `Export - ${new Date().toLocaleDateString()}`
+    const metadata: ExportMetadata = {
+      case_title: caseTitle.value,
+      court_name: courtName.value,
+      recipient: recipient.value,
+      overview_notes: overviewNotes.value,
+      include_evidence_index: includeEvidenceIndex.value,
+      include_overview: includeOverview.value,
+      include_ai_summary: includeAISummary.value,
+      events_count: filteredEvents.value.length,
+      evidence_count: evidenceData.value?.length || 0,
+      ai_summary_included: !!aiSummary.value
+    }
+
+    const response = await $fetch('/api/exports', {
+      method: 'POST',
+      body: {
+        title,
+        markdown_content: markdownContent,
+        focus: exportFocus.value,
+        metadata
+      }
+    })
+
+    if (response?.export) {
+      currentExportId.value = response.export.id
+      currentExportTitle.value = response.export.title
+      await refreshExports()
+
+      toast.add({
+        title: 'Export saved',
+        description: 'Your export has been saved and can be accessed from your history.',
+        icon: 'i-lucide-check',
+        color: 'success'
+      })
+    }
+  } catch (error) {
+    console.error('[Export] Failed to save export:', error)
+    toast.add({
+      title: 'Save failed',
+      description: 'Unable to save export. Please try again.',
+      icon: 'i-lucide-triangle-alert',
+      color: 'error'
+    })
+  } finally {
+    saving.value = false
+  }
+}
+
 async function generateMarkdown() {
   generating.value = true
   copied.value = false
+  currentExportId.value = null
 
   try {
     // Generate AI summary first if enabled (optional - won't block export if it fails)
@@ -393,6 +486,9 @@ async function generateMarkdown() {
     // After generating an export, default to the rendered view
     showRendered.value = true
     viewMode.value = 'preview'
+
+    // Auto-save the export
+    await saveExport(markdown.value)
   } finally {
     generating.value = false
   }
@@ -404,6 +500,144 @@ function startNewExport() {
   copied.value = false
   showRendered.value = false
   aiSummary.value = null
+  currentExportId.value = null
+  currentExportTitle.value = ''
+  isEditingTitle.value = false
+}
+
+async function openSavedExport(exp: SavedExport) {
+  try {
+    const response = await $fetch(`/api/exports/${exp.id}`, {
+      headers: useRequestHeaders(['cookie'])
+    })
+
+    if (response?.export) {
+      const fullExport = response.export as SavedExport & { markdown_content: string }
+      markdown.value = fullExport.markdown_content
+      currentExportId.value = fullExport.id
+      currentExportTitle.value = fullExport.title
+      exportFocus.value = fullExport.focus
+      lastGeneratedAt.value = new Date(fullExport.created_at).toLocaleString()
+      
+      // Restore metadata if available
+      if (fullExport.metadata) {
+        caseTitle.value = fullExport.metadata.case_title || ''
+        courtName.value = fullExport.metadata.court_name || ''
+        recipient.value = fullExport.metadata.recipient || ''
+      }
+      
+      showRendered.value = true
+      viewMode.value = 'preview'
+    }
+  } catch (error) {
+    console.error('[Export] Failed to load export:', error)
+    toast.add({
+      title: 'Load failed',
+      description: 'Unable to load the export. Please try again.',
+      icon: 'i-lucide-triangle-alert',
+      color: 'error'
+    })
+  }
+}
+
+async function updateExportTitle() {
+  if (!currentExportId.value || !currentExportTitle.value.trim()) {
+    isEditingTitle.value = false
+    return
+  }
+
+  try {
+    await $fetch(`/api/exports/${currentExportId.value}`, {
+      method: 'PATCH',
+      body: {
+        title: currentExportTitle.value.trim()
+      }
+    })
+
+    await refreshExports()
+    isEditingTitle.value = false
+
+    toast.add({
+      title: 'Title updated',
+      icon: 'i-lucide-check',
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('[Export] Failed to update title:', error)
+    toast.add({
+      title: 'Update failed',
+      description: 'Unable to update the title. Please try again.',
+      color: 'error'
+    })
+  }
+}
+
+async function updateExportContent() {
+  if (!currentExportId.value || !markdown.value) return
+
+  saving.value = true
+
+  try {
+    await $fetch(`/api/exports/${currentExportId.value}`, {
+      method: 'PATCH',
+      body: {
+        markdown_content: markdown.value
+      }
+    })
+
+    toast.add({
+      title: 'Export updated',
+      icon: 'i-lucide-check',
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('[Export] Failed to update export:', error)
+    toast.add({
+      title: 'Update failed',
+      description: 'Unable to save changes. Please try again.',
+      color: 'error'
+    })
+  } finally {
+    saving.value = false
+  }
+}
+
+function confirmDelete(exp: SavedExport) {
+  exportToDelete.value = exp
+  deleteConfirmOpen.value = true
+}
+
+async function deleteExport() {
+  if (!exportToDelete.value) return
+
+  try {
+    await $fetch(`/api/exports/${exportToDelete.value.id}`, {
+      method: 'DELETE'
+    })
+
+    await refreshExports()
+
+    // If we just deleted the currently viewed export, go back to configure
+    if (currentExportId.value === exportToDelete.value.id) {
+      startNewExport()
+    }
+
+    toast.add({
+      title: 'Export deleted',
+      icon: 'i-lucide-trash-2',
+      color: 'neutral'
+    })
+  } catch (error) {
+    console.error('[Export] Failed to delete export:', error)
+    toast.add({
+      title: 'Delete failed',
+      description: 'Unable to delete the export. Please try again.',
+      color: 'error'
+    })
+  } finally {
+    deleteConfirmOpen.value = false
+    exportToDelete.value = null
+  }
 }
 
 async function copyToClipboard() {
@@ -424,7 +658,6 @@ async function copyToClipboard() {
       copied.value = false
     }, 2000)
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('[Export] Failed to copy markdown:', e)
     
     toast.add({
@@ -463,7 +696,6 @@ async function downloadPdf() {
     const contentWidth = pageWidth - margin * 2
     
     let cursorY = margin
-    const lineHeight = 14 // for 10pt text
     
     // Helper: Check for page break
     const ensureSpace = (height: number) => {
@@ -524,7 +756,7 @@ async function downloadPdf() {
       const splitOverview = doc.splitTextToSize(overviewText, contentWidth)
       
       if (ensureSpace(splitOverview.length * 14)) {
-        // If page break happened, reprint header? No, just continue text
+        // If page break happened, continue text
       }
       
       doc.text(splitOverview, margin, cursorY)
@@ -547,17 +779,15 @@ async function downloadPdf() {
       cursorY += 20
     } else {
       events.forEach((event, index) => {
-        // Calculate space needed roughly (header + desc + meta + spacing)
         const descLines = event.description ? doc.splitTextToSize(event.description, contentWidth - 15).length : 0
         const metaCount = (event.location ? 1 : 0) + (event.participants?.length ? 1 : 0) + (event.evidenceIds?.length ? 1 : 0)
         const estimatedHeight = 20 + (descLines * 14) + (metaCount * 14) + 10
         
         ensureSpace(estimatedHeight)
 
-        // Event Header: 1. Date - Title (Type)
         doc.setFont('helvetica', 'normal')
         doc.setFontSize(10)
-        doc.setTextColor(100, 100, 100) // Gray for date
+        doc.setTextColor(100, 100, 100)
         
         const dateStr = formatDate(event.timestamp)
         const dateWidth = doc.getTextWidth(dateStr)
@@ -569,14 +799,11 @@ async function downloadPdf() {
         doc.setTextColor(80, 80, 80)
         doc.text(dateStr, margin + 15, cursorY)
         
-        // Title (Bold)
         doc.setTextColor(0, 0, 0)
         doc.setFont('helvetica', 'bold')
-        const titleX = margin + 15 + dateWidth + 10 // Spacing
+        const titleX = margin + 15 + dateWidth + 10
         doc.text(event.title, titleX, cursorY)
         
-        // Type (Gray, Italic, Right aligned or Next to title?)
-        // Let's put it in parens after title
         const titleWidth = doc.getTextWidth(event.title)
         doc.setFont('helvetica', 'italic')
         doc.setTextColor(100, 100, 100)
@@ -584,7 +811,6 @@ async function downloadPdf() {
         
         cursorY += 16
 
-        // Description
         if (event.description) {
           doc.setFont('helvetica', 'normal')
           doc.setTextColor(0, 0, 0)
@@ -593,7 +819,6 @@ async function downloadPdf() {
           cursorY += (splitDesc.length * 14) + 4
         }
 
-        // Metadata (Location, Participants, Evidence)
         doc.setFontSize(9)
         doc.setTextColor(80, 80, 80)
         
@@ -608,13 +833,13 @@ async function downloadPdf() {
         }
 
         if (event.evidenceIds?.length) {
-          doc.setTextColor(0, 100, 200) // Link colorish
+          doc.setTextColor(0, 100, 200)
           doc.text(`Evidence IDs: ${event.evidenceIds.join(', ')}`, margin + 15, cursorY)
           doc.setTextColor(80, 80, 80)
           cursorY += 12
         }
 
-        cursorY += 10 // Spacing between events
+        cursorY += 10
       })
     }
     
@@ -637,14 +862,12 @@ async function downloadPdf() {
         doc.text('No evidence items found for this export.', margin, cursorY)
       } else {
         evidenceItems.forEach((item, index) => {
-          // Calc height
           const summaryLines = item.summary ? doc.splitTextToSize(item.summary, contentWidth - 15).length : 0
           const metaHeight = item.tags?.length ? 14 : 0
           const estimatedHeight = 20 + (summaryLines * 14) + metaHeight + 10
           
           ensureSpace(estimatedHeight)
 
-          // Item Header: 1. [Date] Name (Type)
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(10)
           
@@ -705,7 +928,6 @@ async function downloadPdf() {
       color: 'neutral'
     })
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('[Export] Failed to generate PDF:', e)
 
     toast.add({
@@ -718,32 +940,136 @@ async function downloadPdf() {
     pdfGenerating.value = false
   }
 }
+
+function getFocusIcon(focus: ExportFocus) {
+  switch (focus) {
+    case 'incidents-only':
+      return 'i-lucide-alert-triangle'
+    case 'positive-parenting':
+      return 'i-lucide-heart'
+    default:
+      return 'i-lucide-file-text'
+  }
+}
+
+function getFocusColor(focus: ExportFocus) {
+  switch (focus) {
+    case 'incidents-only':
+      return 'text-warning'
+    case 'positive-parenting':
+      return 'text-success'
+    default:
+      return 'text-primary'
+  }
+}
 </script>
 
 <template>
   <UDashboardPanel id="export">
     <template #header>
-      <UDashboardNavbar :title="viewMode === 'configure' ? 'New export' : 'Export review'">
+      <UDashboardNavbar 
+        :title="viewMode === 'configure' ? 'New export' : viewMode === 'history' ? 'Export history' : 'Export review'"
+      >
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #trailing>
-          <div class="hidden sm:flex items-center gap-3 text-xs text-muted">
-            <span v-if="viewMode === 'configure'">
-              Step 1 of 2 · Configure your export
-            </span>
-            <span v-else>
-              Step 2 of 2 · Review & share
-            </span>
+          <div class="flex items-center gap-3">
+            <UButton
+              v-if="viewMode !== 'history'"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-history"
+              :badge="savedExports.length > 0 ? savedExports.length : undefined"
+              @click="viewMode = 'history'"
+            >
+              <span class="hidden sm:inline">History</span>
+            </UButton>
+            <UButton
+              v-if="viewMode === 'history'"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-plus"
+              @click="startNewExport"
+            >
+              New export
+            </UButton>
           </div>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
+      <!-- History view -->
+      <div v-if="viewMode === 'history'" class="space-y-4">
+        <div v-if="exportsStatus === 'pending'" class="flex items-center justify-center py-12">
+          <UIcon name="i-lucide-loader-2" class="size-6 animate-spin text-muted" />
+        </div>
+
+        <div v-else-if="!savedExports.length" class="flex flex-col items-center justify-center py-16 text-center">
+          <UIcon name="i-lucide-file-text" class="size-12 text-muted/40 mb-4" />
+          <p class="text-sm font-medium text-highlighted">No exports yet</p>
+          <p class="text-xs text-muted mt-1">Generate your first export to see it here.</p>
+          <UButton
+            color="primary"
+            variant="solid"
+            size="sm"
+            icon="i-lucide-plus"
+            class="mt-4"
+            @click="startNewExport"
+          >
+            Create export
+          </UButton>
+        </div>
+
+        <div v-else class="grid gap-3 max-w-4xl">
+          <UCard
+            v-for="exp in savedExports"
+            :key="exp.id"
+            class="cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all"
+            @click="openSavedExport(exp)"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex items-start gap-3 min-w-0">
+                <UIcon
+                  :name="getFocusIcon(exp.focus)"
+                  :class="['size-5 shrink-0 mt-0.5', getFocusColor(exp.focus)]"
+                />
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-highlighted truncate">
+                    {{ exp.title }}
+                  </p>
+                  <div class="flex items-center gap-2 mt-1 text-xs text-muted">
+                    <span>{{ formatRelativeDate(exp.created_at) }}</span>
+                    <span>·</span>
+                    <span>{{ exportFocusOptions.find(o => o.value === exp.focus)?.label || exp.focus }}</span>
+                    <template v-if="exp.metadata?.events_count">
+                      <span>·</span>
+                      <span>{{ exp.metadata.events_count }} events</span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-trash-2"
+                  @click.stop="confirmDelete(exp)"
+                />
+                <UIcon name="i-lucide-chevron-right" class="size-4 text-muted" />
+              </div>
+            </div>
+          </UCard>
+        </div>
+      </div>
+
       <!-- Step 1: Configure export -->
-      <div v-if="viewMode === 'configure'" class="space-y-6">
+      <div v-else-if="viewMode === 'configure'" class="space-y-6">
         <p class="max-w-3xl text-sm text-muted">
           Generate a plain‑text, court‑ready markdown summary you can paste into an email, document, or portal.
           We'll pull in details from your
@@ -820,32 +1146,32 @@ async function downloadPdf() {
               </div>
             </div>
 
-          <!-- Focus -->
-          <div class="space-y-3">
-            <p class="text-xs font-medium uppercase tracking-wide text-muted">
-              Focus
-            </p>
-            <div class="space-y-1">
-              <p class="text-xs font-medium text-highlighted">
-                What do you want to highlight?
+            <!-- Focus -->
+            <div class="space-y-3">
+              <p class="text-xs font-medium uppercase tracking-wide text-muted">
+                Focus
               </p>
+              <div class="space-y-1">
+                <p class="text-xs font-medium text-highlighted">
+                  What do you want to highlight?
+                </p>
 
-              <USelect
-                v-model="exportFocus"
-                :items="exportFocusOptions"
-                value-attribute="value"
-                option-attribute="label"
+                <USelect
+                  v-model="exportFocus"
+                  :items="exportFocusOptions"
+                  value-attribute="value"
+                  option-attribute="label"
                   class="w-full md:w-60"
-                :ui="{
-                  trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
-                }"
-              />
+                  :ui="{
+                    trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200'
+                  }"
+                />
 
-              <p class="mt-1 text-xs text-muted">
-                {{ exportFocusOptions.find(option => option.value === exportFocus)?.description }}
-              </p>
+                <p class="mt-1 text-xs text-muted">
+                  {{ exportFocusOptions.find(option => option.value === exportFocus)?.description }}
+                </p>
+              </div>
             </div>
-          </div>
 
             <!-- Advanced options -->
             <UCollapsible class="flex flex-col gap-2">
@@ -872,19 +1198,19 @@ async function downloadPdf() {
                       Sections
                     </p>
 
-                  <div class="space-y-2">
-                    <USwitch
-                      v-model="includeOverview"
-                      label="Include overview section"
-                      description="Short narrative at the top explaining what the reader should understand."
-                    />
+                    <div class="space-y-2">
+                      <USwitch
+                        v-model="includeOverview"
+                        label="Include overview section"
+                        description="Short narrative at the top explaining what the reader should understand."
+                      />
 
-                    <USwitch
-                      v-model="includeEvidenceIndex"
-                      label="Include evidence index"
-                      description="Numbered list of evidence items with summaries and tags."
-                    />
-                  </div>
+                      <USwitch
+                        v-model="includeEvidenceIndex"
+                        label="Include evidence index"
+                        description="Numbered list of evidence items with summaries and tags."
+                      />
+                    </div>
                   </div>
 
                   <!-- Overview notes -->
@@ -964,17 +1290,56 @@ async function downloadPdf() {
       <div v-else class="flex flex-col gap-4 h-full">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="space-y-1">
-            <p class="text-sm font-medium text-highlighted">
-              Export ready
-            </p>
+            <!-- Editable title -->
+            <div class="flex items-center gap-2">
+              <template v-if="isEditingTitle">
+                <UInput
+                  v-model="currentExportTitle"
+                  size="sm"
+                  class="w-64"
+                  @keyup.enter="updateExportTitle"
+                  @keyup.escape="isEditingTitle = false"
+                />
+                <UButton
+                  color="primary"
+                  variant="soft"
+                  size="xs"
+                  icon="i-lucide-check"
+                  @click="updateExportTitle"
+                />
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-x"
+                  @click="isEditingTitle = false"
+                />
+              </template>
+              <template v-else>
+                <p class="text-sm font-medium text-highlighted">
+                  {{ currentExportTitle || caseTitle || 'Untitled export' }}
+                </p>
+                <UButton
+                  v-if="currentExportId"
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-pencil"
+                  class="opacity-50 hover:opacity-100"
+                  @click="isEditingTitle = true"
+                />
+              </template>
+            </div>
             <p class="text-xs text-muted">
-              {{ caseTitle || 'Untitled case' }}
-              <span class="mx-1">·</span>
               {{ exportFocusLabel }}
               <span v-if="lastGeneratedAt" class="mx-1">·</span>
               <span v-if="lastGeneratedAt">
                 Generated {{ lastGeneratedAt }}
               </span>
+              <template v-if="currentExportId">
+                <span class="mx-1">·</span>
+                <span class="text-success">Saved</span>
+              </template>
             </p>
           </div>
 
@@ -1034,8 +1399,7 @@ async function downloadPdf() {
             class="h-[min(72vh,calc(100vh-260px))] overflow-y-auto rounded-md bg-subtle p-4"
           >
             <template v-if="!showRendered">
-              <pre class="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-highlighted">
-{{ markdown }}</pre>
+              <pre class="whitespace-pre-wrap break-words font-mono text-sm leading-relaxed text-highlighted">{{ markdown }}</pre>
             </template>
             <template v-else>
               <div class="bg-white dark:bg-gray-900 rounded-md p-6">
@@ -1050,5 +1414,41 @@ async function downloadPdf() {
       </div>
     </template>
   </UDashboardPanel>
-</template>
 
+  <!-- Delete confirmation modal -->
+  <UModal v-model:open="deleteConfirmOpen">
+    <template #content>
+      <UCard>
+        <template #header>
+          <div class="flex items-center gap-3">
+            <UIcon name="i-lucide-trash-2" class="size-5 text-error" />
+            <span class="font-medium">Delete export?</span>
+          </div>
+        </template>
+
+        <p class="text-sm text-muted">
+          Are you sure you want to delete "{{ exportToDelete?.title }}"? This action cannot be undone.
+        </p>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              @click="deleteConfirmOpen = false"
+            >
+              Cancel
+            </UButton>
+            <UButton
+              color="error"
+              variant="solid"
+              @click="deleteExport"
+            >
+              Delete
+            </UButton>
+          </div>
+        </template>
+      </UCard>
+    </template>
+  </UModal>
+</template>

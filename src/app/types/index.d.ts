@@ -83,21 +83,27 @@ export interface InsightItem {
   evidenceIds: number[]
 }
 
-export type ExportStatus = 'pending' | 'completed' | 'failed'
+export type ExportFocus = 'full-timeline' | 'incidents-only' | 'positive-parenting'
 
-export interface ExportPreset {
-  id: string
-  label: string
-  description: string
-  range: string
+export interface ExportMetadata {
+  case_title?: string
+  court_name?: string
+  recipient?: string
+  overview_notes?: string
+  include_evidence_index?: boolean
+  include_overview?: boolean
+  include_ai_summary?: boolean
+  events_count?: number
+  evidence_count?: number
+  ai_summary_included?: boolean
 }
 
-export interface ExportJob {
+export interface SavedExport {
   id: string
-  presetId: string
-  label: string
-  status: ExportStatus
-  createdAt: string
-  readyAt?: string
-  downloadUrl?: string
+  title: string
+  markdown_content?: string
+  focus: ExportFocus
+  metadata: ExportMetadata
+  created_at: string
+  updated_at: string
 }

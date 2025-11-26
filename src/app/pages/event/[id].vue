@@ -306,6 +306,19 @@ async function deleteEventHandler(deleteEvidence: boolean, close?: () => void) {
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+      </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <UButton
+            icon="i-lucide-arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/timeline"
+          >
+            Back to Timeline
+          </UButton>
+        </template>
 
         <template #right>
           <div class="flex items-center gap-2">
@@ -534,18 +547,9 @@ async function deleteEventHandler(deleteEvidence: boolean, close?: () => void) {
                 </UButton>
               </template>
             </UModal>
-
-            <UButton
-              icon="i-lucide-arrow-left"
-              color="neutral"
-              variant="ghost"
-              to="/timeline"
-            >
-              Back to Timeline
-            </UButton>
           </div>
         </template>
-      </UDashboardNavbar>
+      </UDashboardToolbar>
     </template>
 
     <template #body>

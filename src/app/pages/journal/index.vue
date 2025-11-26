@@ -300,7 +300,7 @@ function truncateText(text: string | null, maxLength: number) {
             color="primary"
             size="sm"
             icon="i-lucide-plus"
-            to="/capture"
+            to="/journal/new"
           >
             New Entry
           </UButton>
@@ -456,7 +456,7 @@ function truncateText(text: string | null, maxLength: number) {
               color="primary"
               size="lg"
               icon="i-lucide-pen-line"
-              to="/capture"
+              to="/journal/new"
             >
               Write First Entry
             </UButton>

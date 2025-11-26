@@ -533,7 +533,7 @@ function formatTime(timestamp: string): string {
             color="primary"
             size="sm"
             icon="i-lucide-plus"
-            to="/capture"
+            to="/journal/new"
           >
             New Event
           </UButton>
@@ -701,7 +701,7 @@ function formatTime(timestamp: string): string {
                 variant="solid"
                 size="sm"
                 icon="i-lucide-mic"
-                to="/capture"
+                to="/journal/new"
               >
                 Record event
               </UButton>

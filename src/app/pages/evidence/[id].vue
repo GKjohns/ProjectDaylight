@@ -151,65 +151,67 @@ async function deleteEvidence(close?: () => void) {
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+      </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <UButton
+            icon="i-lucide-arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/evidence"
+          >
+            Back to Evidence
+          </UButton>
+        </template>
 
         <template #right>
-          <div class="flex items-center gap-2">
-            <UModal
-              v-if="status === 'success' && data"
-              title="Delete evidence"
-              :ui="{ footer: 'justify-end' }"
-            >
-              <UButton
-                icon="i-lucide-trash-2"
-                color="error"
-                variant="ghost"
-                size="sm"
-              >
-                Delete
-              </UButton>
-
-              <template #body>
-                <div class="space-y-2">
-                  <p class="text-sm">
-                    This will permanently delete this evidence item.
-                  </p>
-                  <p class="text-xs text-muted">
-                    Any events, communications, or suggestions that reference this evidence will remain,
-                    but their links to this evidence will be removed or set to empty by the database.
-                  </p>
-                </div>
-              </template>
-
-              <template #footer="{ close }">
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  @click="close"
-                >
-                  Cancel
-                </UButton>
-                <UButton
-                  color="error"
-                  variant="solid"
-                  :loading="isDeleting"
-                  @click="deleteEvidence(close)"
-                >
-                  Delete evidence
-                </UButton>
-              </template>
-            </UModal>
-
+          <UModal
+            v-if="status === 'success' && data"
+            title="Delete evidence"
+            :ui="{ footer: 'justify-end' }"
+          >
             <UButton
-              icon="i-lucide-arrow-left"
-              color="neutral"
+              icon="i-lucide-trash-2"
+              color="error"
               variant="ghost"
-              to="/evidence"
+              size="sm"
             >
-              Back to Evidence
+              Delete
             </UButton>
-          </div>
+
+            <template #body>
+              <div class="space-y-2">
+                <p class="text-sm">
+                  This will permanently delete this evidence item.
+                </p>
+                <p class="text-xs text-muted">
+                  Any events, communications, or suggestions that reference this evidence will remain,
+                  but their links to this evidence will be removed or set to empty by the database.
+                </p>
+              </div>
+            </template>
+
+            <template #footer="{ close }">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="close"
+              >
+                Cancel
+              </UButton>
+              <UButton
+                color="error"
+                variant="solid"
+                :loading="isDeleting"
+                @click="deleteEvidence(close)"
+              >
+                Delete evidence
+              </UButton>
+            </template>
+          </UModal>
         </template>
-      </UDashboardNavbar>
+      </UDashboardToolbar>
     </template>
 
     <template #body>

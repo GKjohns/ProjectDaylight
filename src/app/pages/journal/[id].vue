@@ -257,6 +257,19 @@ watch(
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+      </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <UButton
+            icon="i-lucide-arrow-left"
+            color="neutral"
+            variant="ghost"
+            to="/journal"
+          >
+            Back to Journal
+          </UButton>
+        </template>
 
         <template #right>
           <div class="flex items-center gap-2">
@@ -378,18 +391,9 @@ watch(
                 </UButton>
               </template>
             </UModal>
-
-            <UButton
-              icon="i-lucide-arrow-left"
-              color="neutral"
-              variant="ghost"
-              to="/journal"
-            >
-              Back to Journal
-            </UButton>
           </div>
         </template>
-      </UDashboardNavbar>
+      </UDashboardToolbar>
     </template>
 
     <template #body>
