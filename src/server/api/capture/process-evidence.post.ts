@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 /**
  * POST /api/capture/process-evidence
@@ -87,7 +87,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Get authenticated user
   const authUser = await serverSupabaseUser(event)

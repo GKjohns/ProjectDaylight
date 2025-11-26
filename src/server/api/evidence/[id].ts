@@ -1,6 +1,6 @@
 import type { EvidenceItem } from '~/types'
 import type { Tables } from '~/types/database.types'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 type EvidenceRow = Tables<'evidence'>
 type EventEvidenceRow = Tables<'event_evidence'>
@@ -111,7 +111,7 @@ function mapEvidenceToDetailResponse(
 }
 
 export default eventHandler(async (event): Promise<EvidenceDetailResponse | { success: boolean }> => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
   const evidenceIdParam = getRouterParam(event, 'id')
 
   if (!evidenceIdParam) {

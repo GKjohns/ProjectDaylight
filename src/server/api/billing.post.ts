@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Subscription, CreateSubscriptionPayload, PlanTier } from '~/types'
 
 interface SubscriptionRow {
@@ -55,7 +55,7 @@ function generateFakeStripeId(prefix: string): string {
 }
 
 export default eventHandler(async (event): Promise<{ subscription: Subscription }> => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Resolve authenticated user
   const authUser = await serverSupabaseUser(event)

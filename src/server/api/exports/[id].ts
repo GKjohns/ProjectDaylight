@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface ExportUpdateBody {
   title?: string
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const supabase = serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
   const method = event.method
 
   // GET - Fetch single export

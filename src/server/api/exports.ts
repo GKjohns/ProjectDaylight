@@ -1,4 +1,5 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import type { Database } from '~/types/database.types'
 
 export default eventHandler(async (event) => {
   // Protect exports behind authenticated sessions (cookie/JWT based)
@@ -12,7 +13,7 @@ export default eventHandler(async (event) => {
     })
   }
 
-  const supabase = serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient<Database>(event)
 
   const { data: exports, error } = await supabase
     .from('exports')

@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseUser } from '#supabase/server'
 
 interface ExportSummaryBody {
   timeline: any[]

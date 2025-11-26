@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface EventSuggestedEvidenceBody {
   /**
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const supabase = await serverSupabaseServiceRole(event)
+    const supabase = await serverSupabaseClient(event)
 
     // Resolve authenticated user from cookies/JWT (SSR and serverless safe)
     const authUser = await serverSupabaseUser(event)

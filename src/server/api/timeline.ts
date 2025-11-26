@@ -1,6 +1,6 @@
 import type { TimelineEvent } from '~/types'
 import type { Tables } from '~/types/database.types'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 type EventRow = Tables<'events'>
 type EventParticipantRow = Tables<'event_participants'>
@@ -24,7 +24,7 @@ function mapEventToTimelineEvent(
 }
 
 export default eventHandler(async (event) => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Resolve authenticated user from cookies/JWT (SSR and serverless safe)
   const authUser = await serverSupabaseUser(event)

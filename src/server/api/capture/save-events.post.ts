@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 /**
  * POST /api/capture/save-events
@@ -62,7 +62,7 @@ interface SaveEventsBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Get authenticated user
   const authUser = await serverSupabaseUser(event)

@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface ExtractionEventParticipantGroups {
   primary?: string[]
@@ -46,7 +46,7 @@ interface CaptureEventsBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
   const authUser = await serverSupabaseUser(event)
 
   const userId = authUser?.sub || authUser?.id

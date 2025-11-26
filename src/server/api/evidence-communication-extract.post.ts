@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface EvidenceCommunicationExtractBody {
   /**
@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const supabase = await serverSupabaseServiceRole(event)
+    const supabase = await serverSupabaseClient(event)
 
     // Resolve the authenticated user.
     // Prefer the Supabase access token sent in the Authorization header,

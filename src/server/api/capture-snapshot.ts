@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface CaptureEventSummary {
   id: string
@@ -44,8 +44,8 @@ export default defineEventHandler(async (event): Promise<CaptureSnapshotResponse
   const userId = user.id
   console.log('capture-snapshot: Using userId:', userId)
 
-  // Get the Supabase service role client for database operations
-  const supabase = await serverSupabaseServiceRole(event)
+  // Get the Supabase client with the user's session for database operations
+  const supabase = await serverSupabaseClient(event)
 
   const [
     { data: eventsRows, error: eventsError },

@@ -1,9 +1,9 @@
 import { readFiles } from 'h3-formidable'
 import fs from 'fs/promises'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Resolve authenticated user from cookies/JWT (SSR and serverless safe)
   const authUser = await serverSupabaseUser(event)

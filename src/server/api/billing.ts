@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { PricingPlan, Subscription, BillingInfo, PlanTier } from '~/types'
 
 // Define pricing plans - these would eventually come from Stripe or a config
@@ -87,7 +87,7 @@ function mapRowToSubscription(row: SubscriptionRow): Subscription {
 }
 
 export default eventHandler(async (event): Promise<BillingInfo> => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Resolve authenticated user
   const authUser = await serverSupabaseUser(event)

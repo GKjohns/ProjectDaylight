@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface PhotoDescribeBody {
   /**
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const supabase = await serverSupabaseServiceRole(event)
+    const supabase = await serverSupabaseClient(event)
 
     // Resolve the authenticated user (prefer Authorization header, fall back to cookies)
     let userId: string | null = null

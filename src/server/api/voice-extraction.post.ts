@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 interface VoiceExtractionBody {
   transcript?: string
@@ -138,7 +138,7 @@ export default defineEventHandler(async (event) => {
 
     // Best-effort: load user and case context to give the model more precise guidance
     // about who is speaking and what their legal matter is.
-    const supabase = await serverSupabaseServiceRole(event)
+    const supabase = await serverSupabaseClient(event)
 
     const authUser = await serverSupabaseUser(event)
     const userId = authUser?.sub || authUser?.id || null

@@ -1,6 +1,6 @@
 import type { TimelineEvent } from '~/types'
 import type { Tables } from '~/types/database.types'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 type EventRow = Tables<'events'>
 type EventParticipantRow = Tables<'event_participants'>
@@ -158,7 +158,7 @@ function mapEventToDetailResponse(
 }
 
 export default eventHandler(async (event): Promise<EventDetailResponse | { success: boolean; deletedEventId?: string; deletedEvidenceIds?: string[] }> => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
   const eventId = getRouterParam(event, 'id')
   
   if (!eventId) {

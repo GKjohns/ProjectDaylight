@@ -1,4 +1,4 @@
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import type { Subscription, UpdateSubscriptionPayload, PlanTier } from '~/types'
 
 interface SubscriptionRow {
@@ -34,7 +34,7 @@ function mapRowToSubscription(row: SubscriptionRow): Subscription {
 }
 
 export default eventHandler(async (event): Promise<{ subscription: Subscription }> => {
-  const supabase = await serverSupabaseServiceRole(event)
+  const supabase = await serverSupabaseClient(event)
 
   // Resolve authenticated user
   const authUser = await serverSupabaseUser(event)
