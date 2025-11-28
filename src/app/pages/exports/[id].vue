@@ -429,12 +429,8 @@ async function deleteExport() {
           </template>
         </template>
       </UDashboardNavbar>
-      <!-- Functional toolbar -->
-      <div
-        v-if="currentExport"
-        class="shrink-0 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-default bg-elevated/30"
-      >
-        <div class="flex items-center gap-2">
+      <UDashboardToolbar v-if="currentExport">
+        <template #left>
           <UButton
             color="neutral"
             variant="ghost"
@@ -442,61 +438,63 @@ async function deleteExport() {
             icon="i-lucide-arrow-left"
             to="/exports"
           >
-            Exports
+            Back to Exports
           </UButton>
-        </div>
+        </template>
 
-        <div class="flex items-center gap-2">
-          <UButton
-            color="neutral"
-            variant="outline"
-            size="xs"
-            icon="i-lucide-clipboard"
-            :disabled="!currentExport?.markdown_content"
-            @click="copyToClipboard"
-          >
-            <span v-if="copied">Copied</span>
-            <span v-else>Copy</span>
-          </UButton>
-
-          <UButton
-            color="primary"
-            variant="soft"
-            size="xs"
-            icon="i-lucide-file-down"
-            :disabled="!currentExport?.markdown_content"
-            :loading="pdfGenerating"
-            @click="downloadPdf"
-          >
-            PDF
-          </UButton>
-
-          <USwitch
-            v-model="showRendered"
-            size="sm"
-            label="Rendered"
-          />
-
-          <UDropdownMenu
-            :items="[
-              [{
-                label: 'Delete export',
-                icon: 'i-lucide-trash-2',
-                color: 'error',
-                onSelect: () => deleteConfirmOpen = true
-              }]
-            ]"
-            :content="{ align: 'end' }"
-          >
+        <template #right>
+          <div class="flex items-center gap-2">
             <UButton
               color="neutral"
-              variant="ghost"
+              variant="outline"
               size="xs"
-              icon="i-lucide-ellipsis-vertical"
+              icon="i-lucide-clipboard"
+              :disabled="!currentExport?.markdown_content"
+              @click="copyToClipboard"
+            >
+              <span v-if="copied">Copied</span>
+              <span v-else>Copy</span>
+            </UButton>
+
+            <UButton
+              color="primary"
+              variant="soft"
+              size="xs"
+              icon="i-lucide-file-down"
+              :disabled="!currentExport?.markdown_content"
+              :loading="pdfGenerating"
+              @click="downloadPdf"
+            >
+              PDF
+            </UButton>
+
+            <USwitch
+              v-model="showRendered"
+              size="sm"
+              label="Rendered"
             />
-          </UDropdownMenu>
-        </div>
-      </div>
+
+            <UDropdownMenu
+              :items="[
+                [{
+                  label: 'Delete export',
+                  icon: 'i-lucide-trash-2',
+                  color: 'error',
+                  onSelect: () => deleteConfirmOpen = true
+                }]
+              ]"
+              :content="{ align: 'end' }"
+            >
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-ellipsis-vertical"
+              />
+            </UDropdownMenu>
+          </div>
+        </template>
+      </UDashboardToolbar>
     </template>
 
     <template #body>
@@ -516,7 +514,7 @@ async function deleteExport() {
           icon="i-lucide-arrow-left"
           to="/exports"
         >
-          Back to exports
+          Back to Exports
         </UButton>
       </div>
 
