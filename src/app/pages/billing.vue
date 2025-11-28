@@ -431,7 +431,7 @@ function transformPlan(plan: PricingPlan, isCurrent: boolean) {
                 <UIcon name="i-lucide-mail" class="w-4 h-4 mt-0.5 text-primary" />
                 <div>
                   <p class="font-medium text-highlighted">Questions?</p>
-                  <p>Contact us at <a href="mailto:support@projectdaylight.com" class="text-primary hover:underline">support@projectdaylight.com</a></p>
+                  <p>Contact us at <a href="mailto:hello@monumentlabs.io" class="text-primary hover:underline">hello@monumentlabs.io</a></p>
                 </div>
               </div>
             </div>
