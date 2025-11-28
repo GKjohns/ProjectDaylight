@@ -367,6 +367,14 @@ function transformPlan(plan: PricingPlan, isCurrent: boolean) {
                     <UBadge variant="subtle" color="success">Priority Support</UBadge>
                   </div>
                 </div>
+                <!-- That's my dawg -->
+                <div class="hidden sm:block">
+                  <img
+                    src="https://media.giphy.com/media/scftgIpdF1V3eFED52/giphy.gif"
+                    alt="Dancing celebration"
+                    class="w-24 h-24 rounded-lg object-cover"
+                  />
+                </div>
               </div>
             </UCard>
           </template>
