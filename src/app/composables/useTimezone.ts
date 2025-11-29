@@ -131,7 +131,6 @@ export function useTimezone() {
 
   // Save timezone to profiles table
   async function saveTimezone(timezone: string): Promise<boolean> {
-    if (!user.value?.id) return false
     if (!isValidTimezone(timezone)) {
       console.error('[useTimezone] Invalid timezone:', timezone)
       return false
@@ -139,8 +138,15 @@ export function useTimezone() {
 
     isLoading.value = true
     try {
-      await updateProfile({ timezone })
-      userTimezone.value = timezone
+      const updatedProfile = await updateProfile({ timezone })
+
+      if (!updatedProfile) {
+        console.error('[useTimezone] Failed to update profile with new timezone')
+        return false
+      }
+
+      // Prefer the timezone returned from the backend (in case it was normalized)
+      userTimezone.value = updatedProfile.timezone || timezone
       isSynced.value = true
       return true
     } catch (err) {
