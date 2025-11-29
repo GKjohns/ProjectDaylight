@@ -1,6 +1,6 @@
 # Project Daylight - Launch-Focused Roadmap
 
-*Last Updated: November 26, 2024*
+*Last Updated: November 29, 2024*
 
 **Goal: Launch in 2-3 weeks with current features + great experience**
 
@@ -21,15 +21,22 @@
 - Brand identity (logo, favicon, color scheme)
 - Legal pages (Terms of Service, Privacy Policy)
 - Email + Google OAuth signup
+- **Stripe payments** (checkout, portal, webhooks, subscription management)
+- **Full billing page** (plan display, upgrade/downgrade, alpha tier)
+- **9-step onboarding wizard** (how it works, case setup, goals, risk factors)
 
-### 🔥 What's Broken
+### 🔥 What Needs Work
 - ~~**CRITICAL:** All API routes fail in production (work in dev)~~ **FIXED! ✅**
 - ~~Manual auth header passing everywhere (poor DX)~~ **FIXED! ✅**
 - ~~Need to apply auth fix pattern to remaining API routes~~ **FIXED! ✅**
 - ~~Landing page needs work~~ **FIXED! ✅**
 - ~~No branding/polish~~ **FIXED! ✅**
-- No payments/subscriptions
-- No onboarding tutorial for new users
+- ~~No payments/subscriptions~~ **FIXED! ✅**
+- ~~No onboarding tutorial for new users~~ **FIXED! ✅**
+- **Feature gating for free vs paid tiers** ← CRITICAL for launch
+- Mobile responsiveness needs testing
+- Error handling needs polish
+- No monitoring/analytics yet
 
 ---
 
@@ -108,18 +115,21 @@
   
 **Success:** ✅ User can link a photo to multiple events → see photo when viewing event → see events when viewing photo (association happens automatically during event extraction, manual add/remove deferred to post-launch)
 
-### Priority 3: Payments & Billing
-- [ ] **Stripe integration**
-  - Subscription checkout ($49/month)
-  - 7-day free trial
-  - Payment method management
-  - Cancel/resume flow
+### ✅ Priority 3: Payments & Billing - COMPLETE
+- [x] **Stripe integration**
+  - Subscription checkout ($49/month, $495/year)
+  - Stripe Customer Portal for payment management
+  - Webhook handling for subscription lifecycle
+  - Cancel/resume flow via portal
+  - Promotion codes supported
   
-- [ ] **Billing page**
-  - Current plan display
-  - Usage stats (if applicable)
-  - Upgrade/downgrade options
-  - Invoice history
+- [x] **Billing page**
+  - Current plan display with status badges
+  - Monthly/yearly billing toggle (17% savings on yearly)
+  - Upgrade flow with Stripe Checkout
+  - "Manage Billing" button to Stripe Portal
+  - Free/Alpha/Pro/Counsel (coming soon) plan tiers
+  - Alpha tier for early partners (all features, no cost)
 
 ### ✅ Priority 4: Landing Page & Branding - COMPLETE
 - [x] **Professional landing page**
@@ -139,77 +149,113 @@
   - SEO metadata (Open Graph, Twitter cards, Schema.org structured data)
   - [ ] Email templates for auth/billing (deferred)
 
-### 🔄 Priority 5: Onboarding & First Experience - PARTIAL
+### ✅ Priority 5: Onboarding & First Experience - COMPLETE
 - [x] **Smooth signup flow**
   - Email/password or Google OAuth ✅
-  - Immediate access after signup (trial starts) ✅
-  - [ ] Welcome email with getting started tips (deferred)
+  - Immediate access after signup ✅
+  - [ ] Welcome email with getting started tips (deferred to post-launch)
   
-- [ ] **First-use experience** (deferred to post-launch)
-  - Quick 3-step tutorial overlay
-  - Sample data for new users to explore
-  - First voice capture celebration
-  - Clear value demonstration
+- [x] **First-use experience**
+  - Full 9-step onboarding wizard ✅
+  - "How it works" tutorial explaining Journal → AI → Timeline → Export flow ✅
+  - Case setup with role, children, other parent info ✅
+  - Goals and risk factor identification ✅
+  - Middleware integration to redirect new users to onboarding ✅
+  - Skip option for users who want to explore first ✅
+  - Completion celebration with next steps ✅
 
 ---
 
-## PHASE 3: Polish & Launch Prep (Week 3)
+## PHASE 3: Polish & Launch Prep (Current Phase)
 *"Make it feel professional"*
 
-### Priority 6: Critical Polish
+### Priority 6: Feature Gating & Critical Polish ← **ACTIVE**
+
+- [ ] **Feature gating (LAUNCH BLOCKER)**
+  - [ ] Create `useSubscription` composable for tier checks
+  - [ ] Enforce Free tier limits: 5 journal entries, 10 evidence uploads
+  - [ ] Gate Pro-only features: exports, AI insights
+  - [ ] Add upgrade prompts where features are locked
+  - [ ] API-level enforcement (not just UI)
+
 - [ ] **Mobile responsiveness**
-  - Test all pages on mobile
-  - Fix breaking layouts
-  - Ensure capture works on mobile
+  - [ ] Test landing page on mobile
+  - [ ] Test dashboard/home on mobile
+  - [ ] Test capture flow on mobile (voice recording)
+  - [ ] Test timeline view on mobile
+  - [ ] Test evidence upload on mobile
+  - [ ] Test export flow on mobile
+  - [ ] Test billing page on mobile
+  - [ ] Test onboarding wizard on mobile
+  - [ ] Fix any breaking layouts found
+  - [ ] **Floating "Record" FAB for mobile**
+    - Sticky button (bottom-right) for instant voice capture
+    - One tap to start recording → creates journal entry
+    - Show on all authenticated pages (not landing/auth)
   
+- [ ] **Dashboard loading UX (skeleton states)**
+  - [ ] Pages render immediately with `USkeleton` placeholders
+  - [ ] Data pops in after fetch completes (no blank screens)
+  - [ ] Apply to: Home/Dashboard, Timeline, Journal list, Evidence list, Exports list
+  - [ ] Consistent skeleton patterns across all data-heavy pages
+
 - [ ] **Error handling**
-  - User-friendly error messages
-  - Fallback states for failures
-  - Loading states everywhere
+  - [ ] Review API error responses for user-friendliness
+  - [ ] Add fallback states for API failures
+  - [ ] Ensure loading states are consistent
+  - [ ] Handle network errors gracefully
+  - [ ] Add retry mechanisms where appropriate
   
 - [ ] **Performance**
-  - Optimize bundle size
-  - Lazy load heavy components
-  - Cache API responses where sensible
+  - [ ] Review bundle size (target <500kb initial load)
+  - [ ] Lazy load heavy components (export, evidence viewer)
+  - [ ] Optimize images (landing page)
+  - [ ] Add appropriate caching headers
 
 ### Priority 7: Production Readiness
 - [ ] **Monitoring & Analytics**
-  - Error tracking (Sentry)
-  - Basic analytics (Posthog)
-  - Conversion tracking
+  - [ ] Set up Sentry for error tracking
+  - [ ] Set up Posthog for analytics
+  - [ ] Add conversion tracking (signup → onboarding → first capture → paid)
+  - [ ] Create monitoring dashboard
   
 - [ ] **Support infrastructure**
-  - Help documentation (FAQ)
-  - Contact email/form
-  - Bug report mechanism
+  - [ ] Create FAQ/Help page
+  - [ ] Verify support email works (hello@monumentlabs.io)
+  - [ ] Add simple bug report mechanism
+  - [ ] Document common troubleshooting steps
   
 - [x] **Legal requirements**
   - ✅ Terms of Service
   - ✅ Privacy Policy
   - [ ] Cookie consent (if needed - likely not required for US-focused launch)
-  - [ ] Data deletion process (manual via support email for now)
+  - [x] Data deletion process (manual via support email for now)
 
 ---
 
 ## LAUNCH CHECKLIST
 
-### Pre-Launch Testing
-- [ ] Full user journey in production (signup → capture → export)
-- [ ] Payment flow end-to-end
-- [ ] Mobile testing on real devices
-- [ ] Load testing (can handle 100 concurrent users?)
+### Pre-Launch Testing (Week 1)
+- [ ] Full user journey in production (signup → onboarding → capture → export)
+- [ ] Feature gating works correctly (Free limits enforced, Pro unlocks)
+- [ ] Payment flow end-to-end (test mode → live mode)
+- [ ] Mobile testing on real devices (iPhone Safari, Android Chrome)
+- [ ] Verify all Vercel environment variables are production-ready
+- [ ] Test Stripe webhook in production environment
 
-### Launch Day
-- [ ] Monitoring dashboard ready
-- [ ] Support email monitored
-- [ ] Team available for hotfixes
-- [ ] Backup/rollback plan ready
+### Launch Day Prep (Week 2)
+- [ ] Monitoring dashboard ready (Sentry + Posthog)
+- [ ] Support email monitored (hello@monumentlabs.io)
+- [ ] Stripe switched to live mode with production API keys
+- [ ] Team available for hotfixes (first 48 hours critical)
+- [ ] Backup/rollback plan documented
 
-### Success Metrics
+### Success Metrics (First Month)
 - [ ] 10 trial signups in first week
 - [ ] 3 conversions to paid in first month
 - [ ] <5% error rate in production
 - [ ] <3s page load times
+- [ ] Zero critical bugs reported
 
 ---
 
@@ -257,25 +303,94 @@ Every day without paying customers is a day without validation. Launch lean, ite
 
 ---
 
-## Next 48 Hours Action Items
+## NEXT 2 WEEKS: Launch Sprint
 
-1. **Today:**
-   - [x] ~~Diagnose production API issue~~ ✅ DONE
-   - [x] ~~Check all Vercel env variables~~ ✅ DONE
-   - [x] ~~Try minimal fix to get API working~~ ✅ DONE
-   - [x] ~~Landing page and branding~~ ✅ DONE
+### Week 1 (Nov 29 - Dec 6): Polish & Testing
 
-2. **Tomorrow:**
-   - [ ] Begin Stripe integration for payments
-   - [ ] Test full user journey in production (signup → capture → export)
+**Priority: Make it bulletproof on all devices**
 
-3. **This Week:**
-   - [x] ~~Complete Phase 1 (Critical Fixes)~~ ✅ DONE
-   - [x] ~~Complete Phase 2 Priority 1 (Image Evidence Storage)~~ ✅ DONE
-   - [x] ~~Complete Phase 2 Priority 4 (Landing Page & Branding)~~ ✅ DONE
-   - [ ] Complete Phase 2 Priority 3 (Payments & Billing) ← **NEXT PRIORITY**
-   - [ ] Mobile testing and polish
+1. **Feature Gating (CRITICAL for launch)** ← **DO THIS FIRST**
+   - [ ] Create `useSubscription` composable to check user's plan tier
+   - [ ] Define tier limits:
+     - **Free:** 5 journal entries, 10 evidence uploads, basic timeline, no exports
+     - **Pro/Alpha:** Unlimited everything, AI features, exports, priority support
+   - [ ] Gate features in UI:
+     - [ ] Journal entry creation (show limit, upgrade prompt)
+     - [ ] Evidence uploads (show limit, upgrade prompt)
+     - [ ] Export generation (Pro only)
+     - [ ] AI insights/patterns (Pro only)
+   - [ ] Gate features in API:
+     - [ ] `/api/journal` - check entry count before allowing new entries
+     - [ ] `/api/evidence-upload` - check evidence count before allowing uploads
+     - [ ] `/api/exports` - require Pro tier
+   - [ ] Create upgrade prompt component (reusable)
+   - [ ] Add "Upgrade to Pro" CTAs where features are locked
+   - [ ] Test: Free user hits limit → sees upgrade prompt → upgrades → feature unlocks
+
+2. **Mobile Responsiveness (Priority 6)**
+   - [ ] Test all pages on mobile (iPhone, Android)
+   - [ ] Fix any breaking layouts
+   - [ ] Ensure voice capture works on mobile Safari/Chrome
+   - [ ] Test file uploads on mobile
+   - [ ] **Floating "Record" FAB** - sticky button on mobile for quick voice capture
+     - Always visible (bottom-right corner)
+     - One tap to start recording
+     - Makes capturing moments frictionless on the go
+
+3. **Dashboard Loading UX**
+   - [ ] Add `USkeleton` placeholders to all data-heavy pages
+   - [ ] Pages render immediately, data pops in after fetch
+   - [ ] Apply to: Home, Timeline, Journal, Evidence, Exports
+   - [ ] No more blank/white screens while loading
+
+4. **Error Handling Polish**
+   - [ ] Review all API error responses for user-friendly messages
+   - [ ] Add fallback states for failures
+   - [ ] Handle offline/network error gracefully
+
+5. **Full User Journey Testing**
+   - [ ] Test: Signup → Onboarding → First capture → Timeline → Export
+   - [ ] Test: Payment flow end-to-end (Stripe test mode)
+   - [ ] Test: All auth flows (email, Google OAuth, password reset)
+   - [ ] Test: Free tier limits → upgrade flow → unlocked features
+   - [ ] Document any bugs found
+
+### Week 2 (Dec 7 - Dec 13): Production Readiness
+
+**Priority: Launch infrastructure**
+
+1. **Monitoring & Analytics (Priority 7)**
+   - [ ] Set up Sentry for error tracking
+   - [ ] Set up Posthog for basic analytics
+   - [ ] Add conversion tracking (signup → paid)
+   - [ ] Create simple dashboard for key metrics
+
+2. **Support Infrastructure**
+   - [ ] Create FAQ/Help page with common questions
+   - [ ] Set up support email (hello@monumentlabs.io already exists)
+   - [ ] Add bug report mechanism (email or simple form)
+
+3. **Final Launch Prep**
+   - [ ] Configure Stripe for production (real API keys)
+   - [ ] Set up Stripe webhook endpoint for production
+   - [ ] Final production smoke test
+   - [ ] Prepare launch announcement
 
 ---
 
-*Last thought: Perfect is the enemy of shipped. The core flow (voice → timeline → export) is working great. Branding and landing page are polished. **The main blocker for launch is payments** - once Stripe is integrated, you can start getting paying customers!*
+## Phase 2 Status Summary
+
+| Priority | Item | Status |
+|----------|------|--------|
+| 1 | Image Evidence Storage | ✅ Complete |
+| 2 | Evidence-Event Association | ✅ Complete |
+| 3 | Payments & Billing (Infrastructure) | ✅ Complete |
+| 4 | Landing Page & Branding | ✅ Complete |
+| 5 | Onboarding & First Experience | ✅ Complete |
+| 6 | **Feature Gating (Free vs Paid)** | ⚠️ **NEEDED** |
+
+**⚠️ Phase 2 infrastructure is done, but feature gating is required before launch!**
+
+---
+
+*Last thought: The core product is complete. Voice → Timeline → Export works. Payment infrastructure is ready. Onboarding guides new users. **The critical blocker is feature gating** - Free tier users need limits enforced (5 journal entries, 10 evidence uploads, no exports) and upgrade prompts. Without this, there's no reason to pay. After gating, focus on mobile testing and monitoring.*
